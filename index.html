@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Songbook</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#111; color:white; padding:20px; }
+
+.song {
+  background:#222;
+  padding:10px;
+  margin:10px 0;
+  border-radius:10px;
+}
+
+input, select {
+  padding:10px;
+  margin:5px;
+  width:100%;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📖 Songbook</h2>
+
+<!-- SEARCH -->
+<input id="searchInput" placeholder="Search song..." oninput="renderSongs()" />
+
+<!-- FILTER -->
+<select id="languageFilter" onchange="renderSongs()">
+  <option value="">All Language</option>
+  <option value="indonesia">Indonesia</option>
+  <option value="english">English</option>
+  <option value="deutsch">Deutsch</option>
+</select>
+
+<select id="categoryFilter" onchange="renderSongs()">
+  <option value="">All Category</option>
+  <option value="penyembahan">Penyembahan</option>
+  <option value="pujian">Pujian</option>
+  <option value="semangat">Semangat</option>
+</select>
+
+<div id="songs"></div>
+
+<script>
+/* ================= FIREBASE INIT ================= */
+
+const firebaseConfig = {
+  databaseURL: "https://perki-songbook-default-rtdb.europe-west1.firebasedatabase.app"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ================= DATA ================= */
+
+let allSongs = {};
+
+/* ================= REALTIME LISTENER ================= */
+
+db.ref("songs").on("value", (snapshot) => {
+  allSongs = snapshot.val() || {};
+  renderSongs();
+});
+
+/* ================= RENDER ================= */
+
+function renderSongs() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const lang = document.getElementById("languageFilter").value;
+  const cat = document.getElementById("categoryFilter").value;
+
+  const container = document.getElementById("songs");
+  container.innerHTML = "";
+
+  Object.values(allSongs).forEach(song => {
+
+    const matchSearch = song.title.toLowerCase().includes(search);
+    const matchLang = !lang || song.language === lang;
+    const matchCat = !cat || song.category === cat;
+
+    if (matchSearch && matchLang && matchCat) {
+
+      container.innerHTML += `
+        <div class="song">
+          <h3>${song.title}</h3>
+          <small>${song.language} | ${song.category}</small>
+          <p>${song.lyrics || ""}</p>
+        </div>
+      `;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
