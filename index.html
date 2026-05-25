@@ -463,7 +463,7 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
       <div style="font-size:12px;color:var(--muted);">Pilih lagu untuk setlist minggu ini</div>
       <button class="logout-btn" onclick="lockAdmin()">Keluar</button>
     </div>
-    <div class="selected-count" id="selectedCount">Dipilih: <b>0 / 5</b> lagu</div>
+    <div class="selected-count" id="selectedCount">Dipilih: <b>0</b> lagu</div>
     <div class="admin-filter-row" id="adminCatFilters"></div>
     <div class="admin-songs" id="adminSongList">
       <div class="loading-screen"><div class="spinner"></div><div class="loading-text">Memuat lagu…</div></div>
@@ -524,10 +524,12 @@ const SHEET_URL = 'https://raw.githubusercontent.com/GrubbyJustSage12/perki-song
 // STEP 2: Change your PINs
 const ADMIN_PIN = '1234';
 
-// STEP 3: JSONBin config for shared setlist
-const JSONBIN_BIN_ID  = '6a143b8d06e51d47006783a3';
-const JSONBIN_API_KEY = '$2a$10$0Ujr.oFHuuNtHm6CotILp.dTnt3GEwUkG6NOsR40FwT6kKBN32oL.';
-const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+// STEP 3: Npoint.io config for shared setlist
+// 1. Go to https://npoint.io
+// 2. Create a new document with content: {"setlist":[]}
+// 3. Copy the ID from the URL and paste below
+const NPOINT_ID  = '8a3a81fe14479855cd82';
+const NPOINT_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
 // ══════════════════════════════════════════════════════
 // CATEGORY CONFIG
@@ -671,17 +673,14 @@ async function onSongsLoaded() {
 }
 
 async function fetchSetlist() {
+  if (NPOINT_ID === 'YOUR_NPOINT_ID_HERE') { setlistIDs = []; return; }
   try {
-    const res = await fetch(JSONBIN_URL + '/latest', {
-      headers: {
-        'X-Access-Key': JSONBIN_API_KEY
-      }
-    });
+    const res = await fetch(NPOINT_URL);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    setlistIDs = data.record.setlist || [];
+    setlistIDs = data.setlist || [];
   } catch (err) {
-    console.warn('Could not load setlist from JSONBin:', err.message);
+    console.warn('Could not load setlist from npoint:', err.message);
     setlistIDs = [];
   }
 }
@@ -898,25 +897,21 @@ function toggleAdminSong(id) {
   if (adminSelected.includes(id)) {
     adminSelected = adminSelected.filter(x=>x!==id);
   } else {
-    if (adminSelected.length >= 5) { showToast('Maksimal 5 lagu per setlist'); return; }
     adminSelected.push(id);
   }
   renderAdminSongs();
 }
 function updateSelectedCount() {
-  document.getElementById('selectedCount').innerHTML = `Dipilih: <b>${adminSelected.length} / 5</b> lagu`;
+  document.getElementById('selectedCount').innerHTML = `Dipilih: <b>${adminSelected.length}</b> lagu`;
   document.getElementById('adminSaveBtn').classList.toggle('visible', adminSelected.length>0);
 }
 async function saveSetlist() {
   setlistIDs = [...adminSelected];
   document.getElementById('adminSaveBtn').textContent = '⏳ Menyimpan...';
   try {
-    const res = await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Access-Key': JSONBIN_API_KEY
-      },
+    const res = await fetch(NPOINT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ setlist: setlistIDs })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
