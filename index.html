@@ -141,6 +141,8 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 .tag-cat  { background:rgba(255,255,255,0.06); color:var(--muted2); }
 .tag-lang { background:rgba(201,168,76,0.1); color:var(--gold); }
 .tag-key  { background:rgba(255,255,255,0.04); color:var(--muted); }
+.tag-link { background:rgba(92,196,138,0.15); color:var(--green); text-decoration:none; cursor:pointer; }
+.tag-link:hover { background:rgba(92,196,138,0.25); }
 .chevron  { color:var(--muted); font-size:18px; }
 
 .empty-setlist {
@@ -522,6 +524,11 @@ const SHEET_URL = 'https://raw.githubusercontent.com/GrubbyJustSage12/perki-song
 // STEP 2: Change your PINs
 const ADMIN_PIN = '1234';
 
+// STEP 3: JSONBin config for shared setlist
+const JSONBIN_BIN_ID  = '6a143b8d06e51d47006783a3';
+const JSONBIN_API_KEY = '$2a$10$0Ujr.oFHuuNtHm6CotILp.dTnt3GEwUkG6NOsR40FwT6kKBN32oL.';
+const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
 // ══════════════════════════════════════════════════════
 // CATEGORY CONFIG
 // ══════════════════════════════════════════════════════
@@ -569,12 +576,13 @@ function parseCSV(text) {
     const title = (cols[1] || '').trim();
     const cat   = (cols[2] || '').trim().toLowerCase();
     const lang  = (cols[3] || 'IDN').trim().toUpperCase();
-    const key   = (cols[4] || '').trim();
+    const link  = (cols[4] || '').trim();
+    const key   = (cols[5] || '').trim();
 
-    // Build lyrics from remaining columns (col 5 onward)
+    // Build lyrics from remaining columns (col 6 onward)
     // Each column: "Label$$lyrics text"
     const lyrics = [];
-    for (let c = 5; c < cols.length; c++) {
+    for (let c = 6; c < cols.length; c++) {
       const cell = (cols[c] || '').trim();
       if (!cell) continue;
       const parts = cell.split('$$');
@@ -585,7 +593,7 @@ function parseCSV(text) {
       }
     }
     if (!lyrics.length) lyrics.push({ l: 'Lirik', t: '(Lirik belum ditambahkan)' });
-    songs.push({ id, title, cat, lang, key, lyrics });
+    songs.push({ id, title, cat, lang, link, key, lyrics });
   }
   return songs;
 }
@@ -652,17 +660,30 @@ async function fetchSongs() {
   }
 }
 
-function onSongsLoaded() {
+async function onSongsLoaded() {
   // Update hero count
   document.getElementById('heroSongCount').textContent = allSongs.length + ' lagu';
-  // Load setlist from localStorage (persists across sessions)
-  const saved = localStorage.getItem('perkibodor_setlist');
-  if (saved) {
-    try { setlistIDs = JSON.parse(saved); } catch(e) { setlistIDs = []; }
-  }
+  // Load setlist from JSONBin (shared across all devices)
+  await fetchSetlist();
   renderHome();
   renderSongbook();
   if (adminUnlocked) renderAdminSongs();
+}
+
+async function fetchSetlist() {
+  try {
+    const res = await fetch(JSONBIN_URL + '/latest', {
+      headers: {
+        'X-Access-Key': JSONBIN_API_KEY
+      }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    setlistIDs = data.record.setlist || [];
+  } catch (err) {
+    console.warn('Could not load setlist from JSONBin:', err.message);
+    setlistIDs = [];
+  }
 }
 
 function showSetupGuide() {
@@ -886,11 +907,26 @@ function updateSelectedCount() {
   document.getElementById('selectedCount').innerHTML = `Dipilih: <b>${adminSelected.length} / 5</b> lagu`;
   document.getElementById('adminSaveBtn').classList.toggle('visible', adminSelected.length>0);
 }
-function saveSetlist() {
+async function saveSetlist() {
   setlistIDs = [...adminSelected];
-  localStorage.setItem('perkibodor_setlist', JSON.stringify(setlistIDs));
-  renderHome();
-  showToast('✅ Setlist berhasil disimpan!');
+  document.getElementById('adminSaveBtn').textContent = '⏳ Menyimpan...';
+  try {
+    const res = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': JSONBIN_API_KEY
+      },
+      body: JSON.stringify({ setlist: setlistIDs })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    renderHome();
+    showToast('✅ Setlist berhasil disimpan!');
+  } catch (err) {
+    showToast('❌ Gagal menyimpan: ' + err.message);
+  } finally {
+    document.getElementById('adminSaveBtn').textContent = '💾 Simpan Setlist';
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -909,7 +945,8 @@ function renderModal() {
   document.getElementById('mTitle').textContent = s.title;
   document.getElementById('mTags').innerHTML = `
     <span class="tag tag-lang">${s.lang}</span>
-    <span class="tag tag-key">Nada: ${s.key}</span>`;
+    <span class="tag tag-key">Nada: ${s.key}</span>
+    ${s.link ? `<a href="${s.link}" target="_blank" class="tag tag-link">▶ Dengarkan</a>` : ''}`;
   document.getElementById('mLyrics').innerHTML = s.lyrics.map(p =>
     `<span class="stanza-label">${p.l}</span>${p.t}`).join('\n\n');
   document.getElementById('mPrev').disabled = modalIdx===0;
