@@ -194,14 +194,7 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 
 .results-info { padding:14px 20px 8px; font-size:11px; color:var(--muted); }
 
-.song-group { margin-bottom:4px; }
-.group-label {
-  padding:8px 20px 6px; font-size:10px; letter-spacing:2.5px;
-  text-transform:uppercase; color:var(--muted);
-  display:flex; align-items:center; gap:10px;
-}
-.group-label span { color:var(--gold); }
-.group-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
 
 .song-row {
   margin:0 20px 6px; background:var(--surface); border:1px solid var(--border);
@@ -221,8 +214,9 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 .cat-dot[data-cat="perjamuan"]   { background:var(--blue); }
 .cat-dot[data-cat="penutup"]     { background:var(--gold); }
 
+.song-flat-list { padding:0 0 8px; }
 .empty-state { text-align:center; padding:60px 20px; }
-.empty-icon { font-size:48px; margin-bottom:12px; opacity:0.4; }
+.empty-icon { margin-bottom:12px; }
 .empty-text { font-size:14px; color:var(--muted); }
 
 
@@ -310,8 +304,8 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
     <div class="hero-title">Persekutuan<br><em>Kristen Indonesia</em></div>
     <div class="hero-sub">Selamat datang di buku lagu digital kami</div>
     <div class="hero-meta">
-      <div class="meta-chip">📅 <span id="heroDate">—</span></div>
-      <div class="meta-chip">🎵 <span id="heroSongCount">— lagu</span></div>
+      <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <span id="heroDate">—</span></div>
+      <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> <span id="heroSongCount">— lagu</span></div>
     </div>
   </div>
 
@@ -331,9 +325,9 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
   </div>
   <div class="search-wrap">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input class="search-input" id="searchInput" type="text" placeholder="Cari judul atau nomor lagu…" oninput="doSearch()">
-      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
   </div>
   <div class="filter-row" id="catFilters"></div>
@@ -347,10 +341,10 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 <!-- ══════════════ BOTTOM NAV ══════════════ -->
 <div class="bottom-nav">
   <button class="nav-btn active" onclick="showPage('home')" id="navHome">
-    <span class="icon">🏠</span>Home
+    <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home
   </button>
   <button class="nav-btn" onclick="showPage('songbook')" id="navSongbook">
-    <span class="icon">📖</span>Buku Lagu
+    <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>Buku Lagu
   </button>
 
 </div>
@@ -365,13 +359,13 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
         <div class="modal-title" id="mTitle"></div>
         <div class="modal-tags" id="mTags"></div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-divider"></div>
     <div class="modal-lyrics" id="mLyrics"></div>
     <div class="modal-nav-bar">
-      <button class="modal-nav-btn" id="mPrev" onclick="modalNav(-1)">← Prev</button>
-      <button class="modal-nav-btn" id="mNext" onclick="modalNav(1)">Next →</button>
+      <button class="modal-nav-btn" id="mPrev" onclick="modalNav(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Prev</button>
+      <button class="modal-nav-btn" id="mNext" onclick="modalNav(1)">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" transform="scale(-1,1) translate(-24,0)"/></svg></button>
     </div>
   </div>
 </div>
@@ -569,7 +563,7 @@ async function fetchSetlist() {
 function showSetupGuide() {
   document.getElementById('homeContent').innerHTML = `
     <div class="setup-banner">
-      <h3>⚙️ Langkah Setup GitHub CSV</h3>
+      <h3>Langkah Setup GitHub CSV</h3>
       <p>Belum ada data terhubung. Ikuti langkah berikut:</p>
       <ol>
         <li>Buat akun di <b>github.com</b> jika belum punya</li>
@@ -584,12 +578,12 @@ function showSetupGuide() {
       <p style="margin-top:6px;">Kategori yang valid: <b>semangat, penyembahan, persembahan, perjamuan, penutup</b></p>
     </div>`;
   document.getElementById('songbookList').innerHTML = `
-    <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Hubungkan GitHub CSV dulu ya</div></div>`;
+    <div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5C9CE0" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div><div class="empty-text">Hubungkan GitHub CSV dulu ya</div></div>`;
 }
 
 function showFetchError(msg) {
   const html = `<div class="error-box">
-    <div class="err-icon">⚠️</div>
+    <div class="err-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E05C5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
     <p>Gagal memuat data lagu</p>
     <small>${msg}</small>
     <br><button class="retry-btn" onclick="fetchSongs()">Coba Lagi</button>
@@ -606,7 +600,7 @@ function renderHome() {
   let html = '';
   if (!setlistSongs.length) {
     html = `<div class="empty-setlist">
-      <p>🎵 Setlist ibadah minggu ini belum dipilih.<br>Admin dapat memilih lagu di halaman <b>Admin</b>.</p>
+      <p>Setlist ibadah minggu ini belum dipilih.<br>Admin akan segera memperbaruinya.</p>
     </div>`;
   } else {
     html = `<div class="setlist-header"><div class="setlist-label">Setlist Ibadah</div></div>
@@ -622,7 +616,7 @@ function renderHome() {
               ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
             </div>
           </div>
-          <span class="chevron">›</span>
+          <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
         </div>`).join('')}
     </div>`;
   }
@@ -641,7 +635,7 @@ function initFilters() {
     </button>`).join('');
   document.getElementById('langFilters').innerHTML = ['all','IDN','ENG','DEU'].map(l => `
     <button class="filter-pill ${activeFilters.lang===l?'active':''}" onclick="setLangFilter('${l}')">
-      ${l==='all'?'🌐 Semua':l==='IDN'?'🇮🇩 Indonesia':l==='ENG'?'🇬🇧 English':'🇩🇪 Deutsch'}
+      ${l==='all'?'All':l==='IDN'?'Indonesia':l==='ENG'?'English':'Deutsch'}
     </button>`).join('');
 }
 function setCatFilter(c)  { activeFilters.cat=c;  renderSongbook(); }
@@ -673,34 +667,27 @@ function renderSongbook() {
 
   if (!filtered.length) {
     document.getElementById('songbookList').innerHTML =
-      `<div class="empty-state"><div class="empty-icon">🎵</div><div class="empty-text">Tidak ada lagu ditemukan</div></div>`;
+      `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="empty-text">Tidak ada lagu ditemukan</div></div>`;
     return;
   }
 
-  // Group by category
-  const grouped = {};
-  filtered.forEach(s => { if(!grouped[s.cat]) grouped[s.cat]=[]; grouped[s.cat].push(s); });
+  // Flat list sorted by song ID
+  const sorted = [...filtered].sort((a,b) => a.id - b.id);
+  window._filteredSongs = sorted;
 
-  document.getElementById('songbookList').innerHTML = Object.entries(grouped).map(([cat,list]) => `
-    <div class="song-group">
-      <div class="group-label">
-        ${(CATEGORIES[cat]||{label:cat}).label}
+  document.getElementById('songbookList').innerHTML = sorted.map((s, idx) => `
+    <div class="song-row" onclick="openModal(window._filteredSongs,${idx})">
+      <div class="cat-dot" data-cat="${s.cat}"></div>
+      <div class="song-row-num">${s.id}</div>
+      <div class="song-row-body">
+        <div class="song-row-title">${s.title}</div>
+        <div class="song-row-tags">
+          <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+          <span class="tag tag-lang">${s.lang}</span>
+          ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
+        </div>
       </div>
-      ${list.map(s => {
-        const idx = filtered.indexOf(s);
-        return `<div class="song-row" onclick="openModal(window._filteredSongs,${idx})">
-          <div class="cat-dot" data-cat="${s.cat}"></div>
-          <div class="song-row-num">${s.id}</div>
-          <div class="song-row-body">
-            <div class="song-row-title">${s.title}</div>
-            <div class="song-row-tags">
-              <span class="tag tag-lang">${s.lang}</span>
-              ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
-            </div>
-          </div>
-          <span class="chevron" style="font-size:16px;color:var(--muted);">›</span>
-        </div>`;
-      }).join('')}
+      <span class="chevron" style="color:var(--muted);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>`).join('');
 }
 
@@ -760,7 +747,7 @@ function renderAdminSongs() {
   const list = allSongs.filter(s => adminCatFilter==='all' || s.cat===adminCatFilter);
   document.getElementById('adminSongList').innerHTML = list.map(s => `
     <div class="admin-song-row ${adminSelected.includes(s.id)?'selected':''}" onclick="toggleAdminSong(${s.id})">
-      <div class="admin-checkbox">${adminSelected.includes(s.id)?'✓':''}</div>
+      <div class="admin-checkbox">${adminSelected.includes(s.id)?'&#10003;':''}</div>
       <div class="admin-song-info">
         <div class="admin-song-title">${s.id}. ${s.title}</div>
         <div class="admin-song-tags">
@@ -796,13 +783,13 @@ function openModal(list, idx) {
 }
 function renderModal() {
   const s = modalContext[modalIdx];
-  const cat = CATEGORIES[s.cat] || { emoji:'🎵', label:s.cat };
+  const cat = CATEGORIES[s.cat] || { label:s.cat };
   document.getElementById('mEyebrow').textContent = `#${s.id} · ${cat.label}`;
   document.getElementById('mTitle').textContent = s.title;
   document.getElementById('mTags').innerHTML = `
     <span class="tag tag-lang">${s.lang}</span>
     ${s.key ? `<span class="tag tag-key">Key: ${s.key}</span>` : ''}
-    ${s.link ? `<a href="${s.link}" target="_blank" class="tag tag-link">Listen</a>` : ''}`;
+    ${s.link ? `<a href="${s.link}" target="_blank" class="tag tag-link"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Listen</a>` : ''}`;
   document.getElementById('mLyrics').innerHTML = s.lyrics.map(p =>
     `<span class="stanza-label">${p.l}</span>${p.t}`).join('\n\n');
   document.getElementById('mPrev').disabled = modalIdx===0;
