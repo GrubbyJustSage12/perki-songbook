@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perki Bodor — Buku Lagu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0F1014;
+  --surface: #181920;
+  --surface2: #1F2028;
+  --border: rgba(255,255,255,0.07);
+  --gold: #C9A84C;
+  --gold2: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --text: #F0EDE6;
+  --muted: #7A7880;
+  --muted2: #A09DA8;
+  --red: #E05C5C;
+  --green: #5CC48A;
+  --blue: #5C9CE0;
+  --purple: #A07CE0;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0;
+  background:rgba(15,16,20,0.97); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex:1; padding:12px 8px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:none; cursor:pointer;
+  color:var(--muted); font-family:'Jost',sans-serif;
+  font-size:10px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase;
+  transition:color 0.2s;
+}
+.nav-btn .icon { font-size:20px; line-height:1; }
+.nav-btn.active { color:var(--gold); }
+
+/* ── PAGES ── */
+.page { display:none; padding:0 0 90px; min-height:100vh; }
+.page.active { display:block; }
+
+/* ── LOADING ── */
+.loading-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:60vh; gap:16px;
+}
+.spinner {
+  width:36px; height:36px;
+  border:3px solid var(--border);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:13px; color:var(--muted); }
+
+.error-box {
+  margin:24px 20px;
+  background:rgba(224,92,92,0.08);
+  border:1px solid rgba(224,92,92,0.2);
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+}
+.error-box .err-icon { font-size:28px; margin-bottom:8px; }
+.error-box p { font-size:13px; color:#E05C5C; line-height:1.6; }
+.error-box small { font-size:11px; color:var(--muted); display:block; margin-top:6px; }
+.retry-btn {
+  margin-top:14px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:8px 20px;
+  font-family:'Jost',sans-serif; font-size:13px; color:var(--text);
+  cursor:pointer;
+}
+
+/* ── HERO ── */
+.home-hero {
+  padding:52px 20px 24px;
+  background:linear-gradient(160deg,#1a1508 0%,#0F1014 60%);
+  border-bottom:1px solid var(--border);
+  position:relative; overflow:hidden;
+}
+.home-hero::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:200px; height:200px;
+  background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%);
+  border-radius:50%;
+}
+.hero-eyebrow { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.hero-title { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; line-height:1.15; margin-bottom:6px; }
+.hero-title em { font-style:italic; color:var(--gold2); }
+.hero-sub { font-size:13px; color:var(--muted2); margin-bottom:20px; }
+.hero-meta { display:flex; flex-wrap:wrap; gap:8px; }
+.meta-chip {
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:20px; padding:5px 12px; font-size:11px; color:var(--muted2);
+  display:flex; align-items:center; gap:5px;
+}
+
+/* ── SETLIST SECTION ── */
+.setlist-header {
+  padding:20px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.setlist-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+.setlist-cards { padding:0 20px; display:flex; flex-direction:column; gap:10px; }
+.setlist-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:16px;
+  display:flex; align-items:center; gap:14px;
+  cursor:pointer; transition:all 0.2s;
+  position:relative; overflow:hidden;
+}
+.setlist-card::after {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width:3px; border-radius:3px 0 0 3px;
+}
+.setlist-card[data-cat="semangat"]::after    { background:var(--red); }
+.setlist-card[data-cat="penyembahan"]::after { background:var(--purple); }
+.setlist-card[data-cat="persembahan"]::after { background:var(--green); }
+.setlist-card[data-cat="perjamuan"]::after   { background:var(--blue); }
+.setlist-card[data-cat="penutup"]::after     { background:var(--gold); }
+.setlist-card:hover { border-color:rgba(201,168,76,0.3); transform:translateX(2px); }
+.setlist-num {
+  font-family:'Playfair Display',serif; font-size:28px; font-weight:700;
+  color:rgba(201,168,76,0.25); min-width:36px; line-height:1;
+}
+.setlist-info { flex:1; }
+.setlist-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:600; margin-bottom:4px; line-height:1.2; }
+.setlist-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.tag { font-size:10px; padding:2px 8px; border-radius:10px; letter-spacing:0.3px; }
+.tag-cat  { background:rgba(255,255,255,0.06); color:var(--muted2); }
+.tag-lang { background:rgba(201,168,76,0.1); color:var(--gold); }
+.tag-key  { background:rgba(255,255,255,0.04); color:var(--muted); }
+.tag-link { background:rgba(92,196,138,0.15); color:var(--green); text-decoration:none; cursor:pointer; }
+.tag-link:hover { background:rgba(92,196,138,0.25); }
+.chevron  { color:var(--muted); font-size:18px; }
+
+.empty-setlist {
+  margin:20px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:32px; text-align:center;
+}
+.empty-setlist p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+/* ── SONGBOOK ── */
+.page-header {
+  padding:52px 20px 16px;
+  position:sticky; top:0;
+  background:rgba(15,16,20,0.97); backdrop-filter:blur(20px);
+  z-index:50; border-bottom:1px solid var(--border);
+}
+.page-title { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; margin-bottom:2px; }
+.page-subtitle { font-size:12px; color:var(--muted); }
+
+.search-wrap { padding:12px 20px 0; }
+.search-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:11px 16px;
+  display:flex; align-items:center; gap:10px;
+  transition:border-color 0.2s;
+}
+.search-box:focus-within { border-color:rgba(201,168,76,0.4); }
+.search-icon { font-size:15px; color:var(--muted); }
+.search-input {
+  flex:1; background:none; border:none; outline:none;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+}
+.search-input::placeholder { color:var(--muted); }
+.search-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; display:none; }
+.search-clear.visible { display:block; }
+
+.filter-row {
+  display:flex; gap:8px; padding:12px 20px 0;
+  overflow-x:auto; scrollbar-width:none;
+}
+.filter-row::-webkit-scrollbar { display:none; }
+.filter-pill {
+  flex-shrink:0; background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:6px 14px;
+  font-family:'Jost',sans-serif; font-size:11px; font-weight:500;
+  color:var(--muted2); cursor:pointer; white-space:nowrap;
+  transition:all 0.15s; letter-spacing:0.3px;
+}
+.filter-pill.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+
+.results-info { padding:14px 20px 8px; font-size:11px; color:var(--muted); }
+
+.song-group { margin-bottom:4px; }
+.group-label {
+  padding:8px 20px 6px; font-size:10px; letter-spacing:2.5px;
+  text-transform:uppercase; color:var(--muted);
+  display:flex; align-items:center; gap:10px;
+}
+.group-label span { color:var(--gold); }
+.group-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.song-row {
+  margin:0 20px 6px; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:13px 14px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all 0.15s;
+}
+.song-row:hover { border-color:rgba(201,168,76,0.3); }
+.song-row-num { font-family:'Playfair Display',serif; font-size:13px; color:var(--muted); min-width:24px; text-align:center; }
+.song-row-body { flex:1; min-width:0; }
+.song-row-title { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+.song-row-tags { display:flex; gap:5px; }
+.cat-dot { width:6px; height:6px; border-radius:50%; margin-top:1px; flex-shrink:0; }
+.cat-dot[data-cat="semangat"]    { background:var(--red); }
+.cat-dot[data-cat="penyembahan"] { background:var(--purple); }
+.cat-dot[data-cat="persembahan"] { background:var(--green); }
+.cat-dot[data-cat="perjamuan"]   { background:var(--blue); }
+.cat-dot[data-cat="penutup"]     { background:var(--gold); }
+
+.empty-state { text-align:center; padding:60px 20px; }
+.empty-icon { font-size:48px; margin-bottom:12px; opacity:0.4; }
+.empty-text { font-size:14px; color:var(--muted); }
+
+
+
+
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(6px);
+  z-index:200; display:flex; align-items:flex-end;
+  opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  background:var(--surface); border-radius:20px 20px 0 0;
+  width:100%; max-width:640px; margin:0 auto;
+  max-height:92vh; overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+  border-top:1px solid var(--border);
+}
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-handle { width:36px; height:4px; border-radius:2px; background:var(--border); margin:12px auto 0; }
+.modal-top { padding:16px 20px 0; display:flex; align-items:flex-start; gap:12px; }
+.modal-title-block { flex:1; }
+.modal-eyebrow { font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; }
+.modal-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; line-height:1.2; margin-bottom:8px; }
+.modal-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--surface2); border:1px solid var(--border);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); font-size:16px; flex-shrink:0;
+}
+.modal-divider { height:1px; background:var(--border); margin:16px 20px; }
+.modal-lyrics {
+  padding:0 20px 20px;
+  font-family:'Playfair Display',serif; font-size:18px;
+  font-weight:400; line-height:2; color:var(--text); white-space:pre-line;
+}
+.stanza-label {
+  display:block; font-family:'Jost',sans-serif; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--gold);
+  margin:20px 0 4px;
+}
+.stanza-label:first-child { margin-top:0; }
+.modal-nav-bar {
+  position:sticky; bottom:0;
+  background:linear-gradient(to top,var(--surface) 70%,transparent);
+  padding:10px 20px 20px; display:flex; gap:10px;
+}
+.modal-nav-btn {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; padding:12px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:500;
+  color:var(--muted2); cursor:pointer; transition:all 0.15s;
+}
+.modal-nav-btn:hover { border-color:rgba(201,168,76,0.3); color:var(--text); }
+.modal-nav-btn:disabled { opacity:0.3; pointer-events:none; }
+
+
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:100px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:20px; padding:10px 20px; font-size:13px; color:var(--text);
+  opacity:0; transition:all 0.3s; z-index:300; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOME PAGE ══════════════ -->
+<div class="page active" id="homePage">
+  <div class="home-hero">
+    <div class="hero-eyebrow">Perki Bodor · Bochum & Dortmund</div>
+    <div class="hero-title">Persekutuan<br><em>Kristen Indonesia</em></div>
+    <div class="hero-sub">Selamat datang di buku lagu digital kami</div>
+    <div class="hero-meta">
+      <div class="meta-chip">📅 <span id="heroDate">—</span></div>
+      <div class="meta-chip">🎵 <span id="heroSongCount">— lagu</span></div>
+    </div>
+  </div>
+
+  <div id="homeContent">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <div class="loading-text">Memuat data lagu…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SONGBOOK PAGE ══════════════ -->
+<div class="page" id="songbookPage">
+  <div class="page-header">
+    <div class="page-title">Buku Lagu</div>
+    <div class="page-subtitle" id="bookSubtitle">Memuat…</div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Cari judul atau nomor lagu…" oninput="doSearch()">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+  </div>
+  <div class="filter-row" id="catFilters"></div>
+  <div class="filter-row" id="langFilters"></div>
+  <div class="results-info" id="resultsInfo"></div>
+  <div id="songbookList">
+    <div class="loading-screen"><div class="spinner"></div><div class="loading-text">Memuat lagu…</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showPage('home')" id="navHome">
+    <span class="icon">🏠</span>Home
+  </button>
+  <button class="nav-btn" onclick="showPage('songbook')" id="navSongbook">
+    <span class="icon">📖</span>Buku Lagu
+  </button>
+
+</div>
+
+<!-- ══════════════ LYRICS MODAL ══════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-top">
+      <div class="modal-title-block">
+        <div class="modal-eyebrow" id="mEyebrow"></div>
+        <div class="modal-title" id="mTitle"></div>
+        <div class="modal-tags" id="mTags"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-lyrics" id="mLyrics"></div>
+    <div class="modal-nav-bar">
+      <button class="modal-nav-btn" id="mPrev" onclick="modalNav(-1)">← Prev</button>
+      <button class="modal-nav-btn" id="mNext" onclick="modalNav(1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — change these values to match your setup
+// ══════════════════════════════════════════════════════
+
+// STEP 1: Paste your GitHub raw CSV URL here
+// How to get it:
+//   1. Go to your GitHub repo
+//   2. Open songs.csv in the repo
+//   3. Click the file, then click the "Raw" button
+//   4. Copy the URL (starts with raw.githubusercontent.com) and paste below
+const SHEET_URL = 'https://raw.githubusercontent.com/GrubbyJustSage12/perki-songbook/refs/heads/main/songs.csv';
+
+// STEP 2: Change your PINs
+const ADMIN_PIN = '1234';
+
+// STEP 3: Npoint ID for shared setlist (read-only from app)
+// Admin updates setlist manually at npoint.io
+const NPOINT_ID  = '8a3a81fe14479855cd82';
+const NPOINT_URL = `https://api.npoint.io/${NPOINT_ID}`;
+
+// ══════════════════════════════════════════════════════
+// CATEGORY CONFIG
+// ══════════════════════════════════════════════════════
+// Categories are built dynamically from song data
+// No need to predefine them
+let CATEGORIES = {};
+
+function buildCategories(songs) {
+  const cats = {};
+  songs.forEach(s => {
+    if (s.cat && !cats[s.cat]) {
+      cats[s.cat] = { label: s.cat.charAt(0).toUpperCase() + s.cat.slice(1) };
+    }
+  });
+  CATEGORIES = cats;
+}
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let allSongs       = [];
+let setlistIDs     = [];   // array of song IDs (numbers) for this week
+let adminSelected  = [];
+let adminUnlocked  = false;
+let adminPinBuffer = '';
+let adminCatFilter = 'all';
+let activeFilters  = { cat:'all', lang:'all' };
+let modalContext   = [];
+let modalIdx       = 0;
+
+// ══════════════════════════════════════════════════════
+// CSV PARSER
+// Columns expected (row 1 = header, ignored):
+// id | title | category | language | key | verse1 | chorus | verse2 | bridge | outro
+// Lyrics columns are separated by " | " within each cell for stanza labels:
+// "Verse 1$$lyrics here$$Verse 2$$more lyrics"  (use $$ as stanza separator)
+// ══════════════════════════════════════════════════════
+function parseCSV(text) {
+  // Normalize line endings: \r\n and \r -> \n
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // Split into rows properly — respecting quoted fields that contain newlines
+  const rows = splitCSVRows(text);
+  const songs = [];
+
+  // skip header row (index 0)
+  for (let i = 1; i < rows.length; i++) {
+    const cols = splitCSVLine(rows[i]);
+    if (!cols[0] || !cols[1]) continue; // skip empty rows
+    const id    = parseInt(cols[0]) || i;
+    const title = (cols[1] || '').trim();
+    const cat   = (cols[2] || '').trim().toLowerCase();
+    const lang  = (cols[3] || 'IDN').trim().toUpperCase();
+    const link  = (cols[4] || '').trim();
+    const key   = (cols[5] || '').trim();
+
+    // Build lyrics from remaining columns (col 6 onward)
+    // Each column: "Label$$lyrics text"
+    const lyrics = [];
+    for (let c = 6; c < cols.length; c++) {
+      const cell = (cols[c] || '').trim();
+      if (!cell) continue;
+      const parts = cell.split('$$');
+      if (parts.length >= 2) {
+        lyrics.push({ l: parts[0].trim(), t: parts.slice(1).join('$$').trim() });
+      } else {
+        lyrics.push({ l: 'Lirik', t: cell });
+      }
+    }
+    if (!lyrics.length) lyrics.push({ l: 'Lirik', t: '(Lirik belum ditambahkan)' });
+    songs.push({ id, title, cat, lang, link, key, lyrics });
+  }
+  return songs;
+}
+
+// Split CSV text into rows, respecting quoted fields that contain newlines
+function splitCSVRows(text) {
+  const rows = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      // Handle escaped quotes ""
+      if (inQ && text[i+1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ;
+      cur += ch;
+      continue;
+    }
+    if (ch === '\n' && !inQ) {
+      if (cur.trim()) rows.push(cur);
+      cur = '';
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) rows.push(cur);
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      // Handle escaped quotes ""
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ;
+      continue;
+    }
+    if ((ch === ',' || ch === ';') && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+// ══════════════════════════════════════════════════════
+// FETCH SONGS
+// ══════════════════════════════════════════════════════
+async function fetchSongs() {
+  if (SHEET_URL === 'YOUR_GITHUB_RAW_CSV_URL_HERE') {
+    showSetupGuide();
+    return;
+  }
+  try {
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    allSongs = parseCSV(text);
+    if (!allSongs.length) throw new Error('Sheet kosong atau format salah');
+    onSongsLoaded();
+  } catch (err) {
+    showFetchError(err.message);
+  }
+}
+
+async function onSongsLoaded() {
+  // Build dynamic categories from actual song data
+  const CAT_COLORS = ['var(--red)','var(--purple)','var(--green)','var(--blue)','var(--gold)','var(--muted2)'];
+  const uniqueCats = [...new Set(allSongs.map(s => s.cat).filter(Boolean))];
+  CATEGORIES = {};
+  uniqueCats.forEach((cat, i) => {
+    CATEGORIES[cat] = {
+      label: cat.charAt(0).toUpperCase() + cat.slice(1),
+      color: CAT_COLORS[i % CAT_COLORS.length]
+    };
+  });
+  // Update hero count
+  document.getElementById('heroSongCount').textContent = allSongs.length + ' lagu';
+  await fetchSetlist();
+  renderHome();
+  renderSongbook();
+}
+
+async function fetchSetlist() {
+  try {
+    const res = await fetch(NPOINT_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    setlistIDs = data.setlist || [];
+  } catch (err) {
+    console.warn('Could not load setlist:', err.message);
+    setlistIDs = [];
+  }
+}
+
+function showSetupGuide() {
+  document.getElementById('homeContent').innerHTML = `
+    <div class="setup-banner">
+      <h3>⚙️ Langkah Setup GitHub CSV</h3>
+      <p>Belum ada data terhubung. Ikuti langkah berikut:</p>
+      <ol>
+        <li>Buat akun di <b>github.com</b> jika belum punya</li>
+        <li>Buat repository baru, contoh: <b>perkibodor</b></li>
+        <li>Upload dua file: <b>index.html</b> (file ini) dan <b>songs.csv</b></li>
+        <li>Buka file <b>songs.csv</b> di repo, lalu klik tombol <b>Raw</b></li>
+        <li>Copy URL-nya (dimulai dengan <b>raw.githubusercontent.com</b>)</li>
+        <li>Tempel URL tersebut di variabel <b>SHEET_URL</b> di dalam kode HTML ini</li>
+        <li>Aktifkan GitHub Pages: Settings → Pages → Deploy from main branch</li>
+      </ol>
+      <p style="margin-top:10px;">Format CSV: <b>id, title, category, language, key, stanza1, stanza2, ...</b></p>
+      <p style="margin-top:6px;">Kategori yang valid: <b>semangat, penyembahan, persembahan, perjamuan, penutup</b></p>
+    </div>`;
+  document.getElementById('songbookList').innerHTML = `
+    <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Hubungkan GitHub CSV dulu ya</div></div>`;
+}
+
+function showFetchError(msg) {
+  const html = `<div class="error-box">
+    <div class="err-icon">⚠️</div>
+    <p>Gagal memuat data lagu</p>
+    <small>${msg}</small>
+    <br><button class="retry-btn" onclick="fetchSongs()">Coba Lagi</button>
+  </div>`;
+  document.getElementById('homeContent').innerHTML = html;
+  document.getElementById('songbookList').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════
+// HOME RENDER
+// ══════════════════════════════════════════════════════
+function renderHome() {
+  const setlistSongs = setlistIDs.map(id => allSongs.find(s => s.id === id)).filter(Boolean);
+  let html = '';
+  if (!setlistSongs.length) {
+    html = `<div class="empty-setlist">
+      <p>🎵 Setlist ibadah minggu ini belum dipilih.<br>Admin dapat memilih lagu di halaman <b>Admin</b>.</p>
+    </div>`;
+  } else {
+    html = `<div class="setlist-header"><div class="setlist-label">Setlist Ibadah</div></div>
+    <div class="setlist-cards">
+      ${setlistSongs.map((s,i) => `
+        <div class="setlist-card" data-cat="${s.cat}" onclick="openModal(window._setlistSongs,${i})">
+          <div class="setlist-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="setlist-info">
+            <div class="setlist-title">${s.title}</div>
+            <div class="setlist-tags">
+              <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+              <span class="tag tag-lang">${s.lang}</span>
+              ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('homeContent').innerHTML = html;
+  window._setlistSongs = setlistSongs;
+}
+
+// ══════════════════════════════════════════════════════
+// SONGBOOK
+// ══════════════════════════════════════════════════════
+function initFilters() {
+  const allCats = ['all', ...Object.keys(CATEGORIES)];
+  document.getElementById('catFilters').innerHTML = allCats.map(c => `
+    <button class="filter-pill ${activeFilters.cat===c?'active':''}" onclick="setCatFilter('${c}')">
+      ${c==='all' ? 'All' : CATEGORIES[c].label}
+    </button>`).join('');
+  document.getElementById('langFilters').innerHTML = ['all','IDN','ENG','DEU'].map(l => `
+    <button class="filter-pill ${activeFilters.lang===l?'active':''}" onclick="setLangFilter('${l}')">
+      ${l==='all'?'🌐 Semua':l==='IDN'?'🇮🇩 Indonesia':l==='ENG'?'🇬🇧 English':'🇩🇪 Deutsch'}
+    </button>`).join('');
+}
+function setCatFilter(c)  { activeFilters.cat=c;  renderSongbook(); }
+function setLangFilter(l) { activeFilters.lang=l; renderSongbook(); }
+function doSearch() {
+  const v = document.getElementById('searchInput').value;
+  document.getElementById('searchClear').classList.toggle('visible', v.length>0);
+  renderSongbook();
+}
+function clearSearch() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchClear').classList.remove('visible');
+  renderSongbook();
+}
+
+function renderSongbook() {
+  if (!allSongs.length) return;
+  initFilters();
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = allSongs.filter(s => {
+    const matchQ   = !q || s.title.toLowerCase().includes(q) || String(s.id).includes(q);
+    const matchCat = activeFilters.cat==='all'  || s.cat===activeFilters.cat;
+    const matchLng = activeFilters.lang==='all' || s.lang===activeFilters.lang;
+    return matchQ && matchCat && matchLng;
+  });
+  window._filteredSongs = filtered;
+  document.getElementById('resultsInfo').textContent = filtered.length + ' lagu ditemukan';
+  document.getElementById('bookSubtitle').textContent = filtered.length + ' dari ' + allSongs.length + ' lagu';
+
+  if (!filtered.length) {
+    document.getElementById('songbookList').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">🎵</div><div class="empty-text">Tidak ada lagu ditemukan</div></div>`;
+    return;
+  }
+
+  // Group by category
+  const grouped = {};
+  filtered.forEach(s => { if(!grouped[s.cat]) grouped[s.cat]=[]; grouped[s.cat].push(s); });
+
+  document.getElementById('songbookList').innerHTML = Object.entries(grouped).map(([cat,list]) => `
+    <div class="song-group">
+      <div class="group-label">
+        ${(CATEGORIES[cat]||{label:cat}).label}
+      </div>
+      ${list.map(s => {
+        const idx = filtered.indexOf(s);
+        return `<div class="song-row" onclick="openModal(window._filteredSongs,${idx})">
+          <div class="cat-dot" data-cat="${s.cat}"></div>
+          <div class="song-row-num">${s.id}</div>
+          <div class="song-row-body">
+            <div class="song-row-title">${s.title}</div>
+            <div class="song-row-tags">
+              <span class="tag tag-lang">${s.lang}</span>
+              ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
+            </div>
+          </div>
+          <span class="chevron" style="font-size:16px;color:var(--muted);">›</span>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+
+function adminPinInput(n) {
+  if (adminPinBuffer.length >= 4) return;
+  adminPinBuffer += n;
+  updatePinDots(adminPinBuffer.length);
+  if (adminPinBuffer.length === 4) {
+    if (adminPinBuffer === ADMIN_PIN) {
+      setTimeout(() => { adminUnlocked=true; showAdminPanel(); }, 150);
+    } else {
+      shakeDots();
+      setTimeout(() => { adminPinBuffer=''; updatePinDots(0); }, 800);
+    }
+  }
+}
+function adminPinDelete() {
+  if (!adminPinBuffer.length) return;
+  adminPinBuffer = adminPinBuffer.slice(0,-1);
+  updatePinDots(adminPinBuffer.length);
+}
+function updatePinDots(count) {
+  for (let i=0;i<4;i++) {
+    const d=document.getElementById('ad'+i);
+    d.classList.toggle('filled', i<count);
+    d.classList.remove('error');
+  }
+}
+function shakeDots() {
+  for (let i=0;i<4;i++) document.getElementById('ad'+i).classList.add('error');
+}
+function showAdminPanel() {
+  document.getElementById('adminLock').style.display='none';
+  document.getElementById('adminPanel').style.display='block';
+  adminSelected = [...setlistIDs];
+  renderAdminCatFilters();
+  renderAdminSongs();
+}
+function lockAdmin() {
+  adminUnlocked=false; adminPinBuffer=''; updatePinDots(0);
+  document.getElementById('adminLock').style.display='block';
+  document.getElementById('adminPanel').style.display='none';
+}
+
+function renderAdminCatFilters() {
+  const cats = ['all', ...Object.keys(CATEGORIES)];
+  document.getElementById('adminCatFilters').innerHTML = cats.map(c => `
+    <button class="filter-pill ${adminCatFilter===c?'active':''}" onclick="setAdminCat('${c}')">
+      ${c==='all'?'Semua':CATEGORIES[c].emoji+' '+CATEGORIES[c].label}
+    </button>`).join('');
+}
+function setAdminCat(c) { adminCatFilter=c; renderAdminCatFilters(); renderAdminSongs(); }
+
+function renderAdminSongs() {
+  if (!allSongs.length) return;
+  const list = allSongs.filter(s => adminCatFilter==='all' || s.cat===adminCatFilter);
+  document.getElementById('adminSongList').innerHTML = list.map(s => `
+    <div class="admin-song-row ${adminSelected.includes(s.id)?'selected':''}" onclick="toggleAdminSong(${s.id})">
+      <div class="admin-checkbox">${adminSelected.includes(s.id)?'✓':''}</div>
+      <div class="admin-song-info">
+        <div class="admin-song-title">${s.id}. ${s.title}</div>
+        <div class="admin-song-tags">
+          <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+          <span class="tag tag-lang">${s.lang}</span>
+        </div>
+      </div>
+    </div>`).join('');
+  updateSelectedCount();
+}
+function toggleAdminSong(id) {
+  if (adminSelected.includes(id)) {
+    adminSelected = adminSelected.filter(x=>x!==id);
+  } else {
+    adminSelected.push(id);
+  }
+  renderAdminSongs();
+}
+function updateSelectedCount() {
+  document.getElementById('selectedCount').innerHTML = `Dipilih: <b>${adminSelected.length}</b> lagu`;
+  document.getElementById('adminSaveBtn').classList.toggle('visible', adminSelected.length>0);
+}
+
+
+// ══════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════
+function openModal(list, idx) {
+  modalContext=list; modalIdx=idx;
+  renderModal();
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function renderModal() {
+  const s = modalContext[modalIdx];
+  const cat = CATEGORIES[s.cat] || { emoji:'🎵', label:s.cat };
+  document.getElementById('mEyebrow').textContent = `#${s.id} · ${cat.label}`;
+  document.getElementById('mTitle').textContent = s.title;
+  document.getElementById('mTags').innerHTML = `
+    <span class="tag tag-lang">${s.lang}</span>
+    ${s.key ? `<span class="tag tag-key">Key: ${s.key}</span>` : ''}
+    ${s.link ? `<a href="${s.link}" target="_blank" class="tag tag-link">Listen</a>` : ''}`;
+  document.getElementById('mLyrics').innerHTML = s.lyrics.map(p =>
+    `<span class="stanza-label">${p.l}</span>${p.t}`).join('\n\n');
+  document.getElementById('mPrev').disabled = modalIdx===0;
+  document.getElementById('mNext').disabled = modalIdx===modalContext.length-1;
+  document.getElementById('modal').scrollTop=0;
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleOverlayClick(e) {
+  if (e.target===document.getElementById('modalOverlay')) closeModal();
+}
+function modalNav(dir) {
+  const n=modalIdx+dir;
+  if (n<0||n>=modalContext.length) return;
+  modalIdx=n; renderModal();
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('modalOverlay').classList.contains('open')) return;
+  if (e.key==='Escape') closeModal();
+  if (e.key==='ArrowRight') modalNav(1);
+  if (e.key==='ArrowLeft')  modalNav(-1);
+});
+
+// ══════════════════════════════════════════════════════
+// PAGE NAV
+// ══════════════════════════════════════════════════════
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  const map = { home:'homePage', songbook:'songbookPage' };
+  const nav = { home:'navHome', songbook:'navSongbook' };
+  document.getElementById(map[p]).classList.add('active');
+  document.getElementById(nav[p]).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+const now = new Date();
+document.getElementById('heroDate').textContent =
+  now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+fetchSongs();
+</script>
+</body>
+</html>
