@@ -550,10 +550,21 @@ async function onSongsLoaded() {
 
 async function fetchSetlist() {
   try {
-    const res = await fetch(NPOINT_URL);
+    // Add ?t=timestamp to prevent browser caching
+    const res = await fetch(NPOINT_URL + '?t=' + new Date().getTime());
+    
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    
     const data = await res.json();
-    setlistIDs = data.setlist || [];
+    
+    // Check if the data format is correct (it must be an object with a 'setlist' array)
+    if (data && Array.isArray(data.setlist)) {
+      setlistIDs = data.setlist; 
+    } else {
+      console.warn('Format JSON salah. { "setlist": [1,2,3] }. Received:', data);
+      setlistIDs = []; // Fallback to empty if format is wrong
+    }
+    
   } catch (err) {
     console.warn('Could not load setlist:', err.message);
     setlistIDs = [];
