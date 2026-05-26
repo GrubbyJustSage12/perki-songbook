@@ -302,7 +302,7 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
   <div class="home-hero">
     <div class="hero-eyebrow">Perki Bodor · Bochum & Dortmund</div>
     <div class="hero-title">Persekutuan<br><em>Kristen Indonesia</em></div>
-    <div class="hero-sub">Selamat datang di buku lagu digital kami</div>
+    <div class="hero-sub">Selamat Beribadah</div>
     <div class="hero-meta">
       <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <span id="heroDate">—</span></div>
       <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> <span id="heroSongCount">— lagu</span></div>
@@ -603,7 +603,7 @@ function renderHome() {
       <p>Setlist ibadah minggu ini belum dipilih.<br>Admin akan segera memperbaruinya.</p>
     </div>`;
   } else {
-    html = `<div class="setlist-header"><div class="setlist-label">Setlist Ibadah</div></div>
+    html = `<div class="setlist-header"><div class="setlist-label">Lagu Ibadah</div></div>
     <div class="setlist-cards">
       ${setlistSongs.map((s,i) => `
         <div class="setlist-card" data-cat="${s.cat}" onclick="openModal(window._setlistSongs,${i})">
