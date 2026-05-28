@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perki Bodor — Buku Lagu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0F1014;
+  --surface: #181920;
+  --surface2: #1F2028;
+  --border: rgba(255,255,255,0.07);
+  --gold: #C9A84C;
+  --gold2: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --text: #F0EDE6;
+  --muted: #7A7880;
+  --muted2: #A09DA8;
+  --red: #E05C5C;
+  --green: #5CC48A;
+  --blue: #5C9CE0;
+  --purple: #A07CE0;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0;
+  background:rgba(15,16,20,0.97); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex:1; padding:12px 8px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:none; cursor:pointer;
+  color:var(--muted); font-family:'Jost',sans-serif;
+  font-size:10px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase;
+  transition:color 0.2s;
+}
+.nav-btn .icon { font-size:20px; line-height:1; }
+.nav-btn.active { color:var(--gold); }
+
+/* ── PAGES ── */
+.page { display:none; padding:0 0 90px; min-height:100vh; }
+.page.active { display:block; }
+
+/* ── LOADING ── */
+.loading-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:60vh; gap:16px;
+}
+.spinner {
+  width:36px; height:36px;
+  border:3px solid var(--border);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:13px; color:var(--muted); }
+
+.error-box {
+  margin:24px 20px;
+  background:rgba(224,92,92,0.08);
+  border:1px solid rgba(224,92,92,0.2);
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+}
+.error-box .err-icon { font-size:28px; margin-bottom:8px; }
+.error-box p { font-size:13px; color:#E05C5C; line-height:1.6; }
+.error-box small { font-size:11px; color:var(--muted); display:block; margin-top:6px; }
+.retry-btn {
+  margin-top:14px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:8px 20px;
+  font-family:'Jost',sans-serif; font-size:13px; color:var(--text);
+  cursor:pointer;
+}
+
+/* ── HERO ── */
+.home-hero {
+  padding:52px 20px 24px;
+  background:linear-gradient(160deg,#1a1508 0%,#0F1014 60%);
+  border-bottom:1px solid var(--border);
+  position:relative; overflow:hidden;
+}
+.home-hero::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:200px; height:200px;
+  background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%);
+  border-radius:50%;
+}
+.hero-eyebrow { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.hero-title { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; line-height:1.15; margin-bottom:6px; }
+.hero-title em { font-style:italic; color:var(--gold2); }
+.hero-sub { font-size:13px; color:var(--muted2); margin-bottom:20px; }
+.hero-meta { display:flex; flex-wrap:wrap; gap:8px; }
+.meta-chip {
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:20px; padding:5px 12px; font-size:11px; color:var(--muted2);
+  display:flex; align-items:center; gap:5px;
+}
+
+/* ── SETLIST SECTION ── */
+.setlist-header {
+  padding:20px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.setlist-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+.setlist-cards { padding:0 20px; display:flex; flex-direction:column; gap:10px; }
+.setlist-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:16px;
+  display:flex; align-items:center; gap:14px;
+  cursor:pointer; transition:all 0.2s;
+  position:relative; overflow:hidden;
+}
+.setlist-card::after {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width:3px; border-radius:3px 0 0 3px;
+}
+.setlist-card[data-cat="semangat"]::after    { background:var(--red); }
+.setlist-card[data-cat="penyembahan"]::after { background:var(--purple); }
+.setlist-card[data-cat="persembahan"]::after { background:var(--green); }
+.setlist-card[data-cat="perjamuan"]::after   { background:var(--blue); }
+.setlist-card[data-cat="penutup"]::after     { background:var(--gold); }
+.setlist-card:hover { border-color:rgba(201,168,76,0.3); transform:translateX(2px); }
+.setlist-num {
+  font-family:'Playfair Display',serif; font-size:28px; font-weight:700;
+  color:rgba(201,168,76,0.25); min-width:36px; line-height:1;
+}
+.setlist-info { flex:1; }
+.setlist-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:600; margin-bottom:4px; line-height:1.2; }
+.setlist-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.tag { font-size:10px; padding:2px 8px; border-radius:10px; letter-spacing:0.3px; }
+.tag-cat  { background:rgba(255,255,255,0.06); color:var(--muted2); }
+.tag-lang { background:rgba(201,168,76,0.1); color:var(--gold); }
+.tag-key  { background:rgba(255,255,255,0.04); color:var(--muted); }
+.tag-link { background:rgba(92,196,138,0.15); color:var(--green); text-decoration:none; cursor:pointer; }
+.tag-link:hover { background:rgba(92,196,138,0.25); }
+.chevron  { color:var(--muted); font-size:18px; }
+
+.empty-setlist {
+  margin:20px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:32px; text-align:center;
+}
+.empty-setlist p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+/* ── EXPORT BUTTON ── */
+.export-wrap { padding:16px 20px 4px; }
+.export-btn {
+  width:100%; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:13px 16px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:500;
+  color:var(--muted2); cursor:pointer; transition:all 0.2s;
+  letter-spacing:0.3px;
+}
+.export-btn:hover { border-color:rgba(201,168,76,0.4); color:var(--gold); }
+.export-btn svg { flex-shrink:0; }
+.export-btn.loading { opacity:0.6; pointer-events:none; }
+
+/* ── EXPORT MODAL ── */
+.export-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(6px);
+  z-index:300; display:flex; align-items:center; justify-content:center;
+  padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.export-overlay.open { opacity:1; pointer-events:all; }
+.export-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:28px; width:100%; max-width:400px; text-align:center;
+}
+.export-box-title {
+  font-family:'Playfair Display',serif; font-size:18px; font-weight:700;
+  margin-bottom:6px;
+}
+.export-box-sub { font-size:12px; color:var(--muted); margin-bottom:20px; line-height:1.6; }
+.export-date-input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 14px; margin-bottom:12px;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; box-sizing:border-box;
+}
+.export-date-input:focus { border-color:rgba(201,168,76,0.4); }
+.export-sermon-input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 14px; margin-bottom:20px;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; box-sizing:border-box;
+  resize:none; height:60px;
+}
+.export-sermon-input:focus { border-color:rgba(201,168,76,0.4); }
+.export-btns { display:flex; gap:10px; }
+.export-action-btn {
+  flex:1; border-radius:12px; padding:13px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; border:1px solid var(--border); transition:all 0.15s;
+  letter-spacing:0.3px;
+}
+.export-action-btn.primary { background:var(--gold); color:var(--bg); border-color:var(--gold); }
+.export-action-btn.secondary { background:var(--surface2); color:var(--muted2); }
+
+/* ── SONGBOOK ── */
+.page-header {
+  padding:52px 20px 16px;
+  position:sticky; top:0;
+  background:rgba(15,16,20,0.97); backdrop-filter:blur(20px);
+  z-index:50; border-bottom:1px solid var(--border);
+}
+.page-title { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; margin-bottom:2px; }
+.page-subtitle { font-size:12px; color:var(--muted); }
+
+.search-wrap { padding:12px 20px 0; }
+.search-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:11px 16px;
+  display:flex; align-items:center; gap:10px;
+  transition:border-color 0.2s;
+}
+.search-box:focus-within { border-color:rgba(201,168,76,0.4); }
+.search-icon { font-size:15px; color:var(--muted); }
+.search-input {
+  flex:1; background:none; border:none; outline:none;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+}
+.search-input::placeholder { color:var(--muted); }
+.search-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; display:none; }
+.search-clear.visible { display:block; }
+
+.filter-row {
+  display:flex; gap:8px; padding:12px 20px 0;
+  overflow-x:auto; scrollbar-width:none;
+}
+.filter-row::-webkit-scrollbar { display:none; }
+.filter-pill {
+  flex-shrink:0; background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:6px 14px;
+  font-family:'Jost',sans-serif; font-size:11px; font-weight:500;
+  color:var(--muted2); cursor:pointer; white-space:nowrap;
+  transition:all 0.15s; letter-spacing:0.3px;
+}
+.filter-pill.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+
+.results-info { padding:14px 20px 8px; font-size:11px; color:var(--muted); }
+
+
+
+.song-row {
+  margin:0 20px 6px; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:13px 14px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all 0.15s;
+}
+.song-row:hover { border-color:rgba(201,168,76,0.3); }
+.song-row-num { font-family:'Playfair Display',serif; font-size:13px; color:var(--muted); min-width:24px; text-align:center; }
+.song-row-body { flex:1; min-width:0; }
+.song-row-title { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+.song-row-tags { display:flex; gap:5px; }
+.cat-dot { width:6px; height:6px; border-radius:50%; margin-top:1px; flex-shrink:0; }
+.cat-dot[data-cat="semangat"]    { background:var(--red); }
+.cat-dot[data-cat="penyembahan"] { background:var(--purple); }
+.cat-dot[data-cat="persembahan"] { background:var(--green); }
+.cat-dot[data-cat="perjamuan"]   { background:var(--blue); }
+.cat-dot[data-cat="penutup"]     { background:var(--gold); }
+
+.song-flat-list { padding:0 0 8px; }
+.empty-state { text-align:center; padding:60px 20px; }
+.empty-icon { margin-bottom:12px; }
+.empty-text { font-size:14px; color:var(--muted); }
+
+
+
+
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(6px);
+  z-index:200; display:flex; align-items:flex-end;
+  opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  background:var(--surface); border-radius:20px 20px 0 0;
+  width:100%; max-width:640px; margin:0 auto;
+  max-height:92vh; overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+  border-top:1px solid var(--border);
+}
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-handle { width:36px; height:4px; border-radius:2px; background:var(--border); margin:12px auto 0; }
+.modal-top { padding:16px 20px 0; display:flex; align-items:flex-start; gap:12px; }
+.modal-title-block { flex:1; }
+.modal-eyebrow { font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; }
+.modal-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; line-height:1.2; margin-bottom:8px; }
+.modal-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--surface2); border:1px solid var(--border);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); font-size:16px; flex-shrink:0;
+}
+.modal-divider { height:1px; background:var(--border); margin:16px 20px; }
+.modal-lyrics {
+  padding:0 20px 20px;
+  font-family:'Playfair Display',serif; font-size:18px;
+  font-weight:400; line-height:2; color:var(--text); white-space:pre-line;
+}
+.stanza-label {
+  display:block; font-family:'Jost',sans-serif; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--gold);
+  margin:20px 0 4px;
+}
+.stanza-label:first-child { margin-top:0; }
+.modal-nav-bar {
+  position:sticky; bottom:0;
+  background:linear-gradient(to top,var(--surface) 70%,transparent);
+  padding:10px 20px 20px; display:flex; gap:10px;
+}
+.modal-nav-btn {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; padding:12px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:500;
+  color:var(--muted2); cursor:pointer; transition:all 0.15s;
+}
+.modal-nav-btn:hover { border-color:rgba(201,168,76,0.3); color:var(--text); }
+.modal-nav-btn:disabled { opacity:0.3; pointer-events:none; }
+
+
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:100px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:20px; padding:10px 20px; font-size:13px; color:var(--text);
+  opacity:0; transition:all 0.3s; z-index:300; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOME PAGE ══════════════ -->
+<div class="page active" id="homePage">
+  <div class="home-hero">
+    <div class="hero-eyebrow">Perki Bodor · Bochum & Dortmund</div>
+    <div class="hero-title">Persekutuan<br><em>Kristen Indonesia</em></div>
+    <div class="hero-sub">Selamat Beribadah</div>
+    <div class="hero-meta">
+      <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <span id="heroDate">—</span></div>
+      <div class="meta-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> <span id="heroSongCount">— lagu</span></div>
+    </div>
+  </div>
+
+  <div id="homeContent">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <div class="loading-text">Memuat data lagu…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SONGBOOK PAGE ══════════════ -->
+<div class="page" id="songbookPage">
+  <div class="page-header">
+    <div class="page-title">Buku Lagu</div>
+    <div class="page-subtitle" id="bookSubtitle">Memuat…</div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Cari judul atau nomor lagu…" oninput="doSearch()">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+  <div class="filter-row" id="catFilters"></div>
+  <div class="filter-row" id="langFilters"></div>
+  <div class="results-info" id="resultsInfo"></div>
+  <div id="songbookList">
+    <div class="loading-screen"><div class="spinner"></div><div class="loading-text">Memuat lagu…</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showPage('home')" id="navHome">
+    <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home
+  </button>
+  <button class="nav-btn" onclick="showPage('songbook')" id="navSongbook">
+    <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>Buku Lagu
+  </button>
+
+</div>
+
+<!-- ══════════════ LYRICS MODAL ══════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-top">
+      <div class="modal-title-block">
+        <div class="modal-eyebrow" id="mEyebrow"></div>
+        <div class="modal-title" id="mTitle"></div>
+        <div class="modal-tags" id="mTags"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-lyrics" id="mLyrics"></div>
+    <div class="modal-nav-bar">
+      <button class="modal-nav-btn" id="mPrev" onclick="modalNav(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Prev</button>
+      <button class="modal-nav-btn" id="mNext" onclick="modalNav(1)">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" transform="scale(-1,1) translate(-24,0)"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ EXPORT MODAL ══════════════ -->
+<div class="export-overlay" id="exportOverlay">
+  <div class="export-box">
+    <div class="export-box-title">Export ke Word</div>
+    <div class="export-box-sub">Masukkan detail ibadah untuk dokumen</div>
+    <input class="export-date-input" id="exportDate" type="text" placeholder="Contoh: Sabtu, 24 Mei 2026">
+    <textarea class="export-sermon-input" id="exportSermon" placeholder="Firman Tuhan (opsional): Kis 2:1-13 ,,Dipenuhi untuk Diutus""></textarea>
+    <div class="export-btns">
+      <button class="export-action-btn primary" onclick="doExport()">Download Word</button>
+      <button class="export-action-btn secondary" onclick="closeExportModal()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — change these values to match your setup
+// ══════════════════════════════════════════════════════
+
+// STEP 1: Paste your GitHub raw CSV URL here
+// How to get it:
+//   1. Go to your GitHub repo
+//   2. Open songs.csv in the repo
+//   3. Click the file, then click the "Raw" button
+//   4. Copy the URL (starts with raw.githubusercontent.com) and paste below
+const SHEET_URL = 'https://raw.githubusercontent.com/GrubbyJustSage12/perki-songbook/refs/heads/main/songs.csv';
+
+// STEP 2: Change your PINs
+const ADMIN_PIN = '1234';
+
+// STEP 3: Npoint ID for shared setlist (read-only from app)
+// Admin updates setlist manually at npoint.io
+const NPOINT_ID  = '8a3a81fe14479855cd82';
+const NPOINT_URL = `https://api.npoint.io/${NPOINT_ID}`;
+
+// ══════════════════════════════════════════════════════
+// CATEGORY CONFIG
+// ══════════════════════════════════════════════════════
+// Categories are built dynamically from song data
+// No need to predefine them
+let CATEGORIES = {};
+
+function buildCategories(songs) {
+  const cats = {};
+  songs.forEach(s => {
+    if (s.cat && !cats[s.cat]) {
+      cats[s.cat] = { label: s.cat.charAt(0).toUpperCase() + s.cat.slice(1) };
+    }
+  });
+  CATEGORIES = cats;
+}
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let allSongs       = [];
+let setlistIDs     = [];   // array of song IDs (numbers) for this week
+let adminSelected  = [];
+let adminUnlocked  = false;
+let adminPinBuffer = '';
+let adminCatFilter = 'all';
+let activeFilters  = { cat:'all', lang:'all' };
+let modalContext   = [];
+let modalIdx       = 0;
+
+// ══════════════════════════════════════════════════════
+// CSV PARSER
+// Columns expected (row 1 = header, ignored):
+// id | title | category | language | key | verse1 | chorus | verse2 | bridge | outro
+// Lyrics columns are separated by " | " within each cell for stanza labels:
+// "Verse 1$$lyrics here$$Verse 2$$more lyrics"  (use $$ as stanza separator)
+// ══════════════════════════════════════════════════════
+function parseCSV(text) {
+  // Normalize line endings: \r\n and \r -> \n
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // Split into rows properly — respecting quoted fields that contain newlines
+  const rows = splitCSVRows(text);
+  const songs = [];
+
+  // skip header row (index 0)
+  for (let i = 1; i < rows.length; i++) {
+    const cols = splitCSVLine(rows[i]);
+    if (!cols[0] || !cols[1]) continue; // skip empty rows
+    const id    = parseInt(cols[0]) || i;
+    const title = (cols[1] || '').trim();
+    const cat   = (cols[2] || '').trim().toLowerCase();
+    const lang  = (cols[3] || 'IDN').trim().toUpperCase();
+    const link  = (cols[4] || '').trim();
+    const key   = (cols[5] || '').trim();
+
+    // Build lyrics from remaining columns (col 6 onward)
+    // Each column: "Label$$lyrics text"
+    const lyrics = [];
+    for (let c = 6; c < cols.length; c++) {
+      const cell = (cols[c] || '').trim();
+      if (!cell) continue;
+      const parts = cell.split('$$');
+      if (parts.length >= 2) {
+        lyrics.push({ l: parts[0].trim(), t: parts.slice(1).join('$$').trim() });
+      } else {
+        lyrics.push({ l: 'Lirik', t: cell });
+      }
+    }
+    if (!lyrics.length) lyrics.push({ l: 'Lirik', t: '(Lirik belum ditambahkan)' });
+    songs.push({ id, title, cat, lang, link, key, lyrics });
+  }
+  return songs;
+}
+
+// Split CSV text into rows, respecting quoted fields that contain newlines
+function splitCSVRows(text) {
+  const rows = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      // Handle escaped quotes ""
+      if (inQ && text[i+1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ;
+      cur += ch;
+      continue;
+    }
+    if (ch === '\n' && !inQ) {
+      if (cur.trim()) rows.push(cur);
+      cur = '';
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) rows.push(cur);
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      // Handle escaped quotes ""
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ;
+      continue;
+    }
+    if ((ch === ',' || ch === ';') && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+// ══════════════════════════════════════════════════════
+// FETCH SONGS
+// ══════════════════════════════════════════════════════
+async function fetchSongs() {
+  if (SHEET_URL === 'YOUR_GITHUB_RAW_CSV_URL_HERE') {
+    showSetupGuide();
+    return;
+  }
+  try {
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    allSongs = parseCSV(text);
+    if (!allSongs.length) throw new Error('Sheet kosong atau format salah');
+    onSongsLoaded();
+  } catch (err) {
+    showFetchError(err.message);
+  }
+}
+
+async function onSongsLoaded() {
+  // Build dynamic categories from actual song data
+  const CAT_COLORS = ['var(--red)','var(--purple)','var(--green)','var(--blue)','var(--gold)','var(--muted2)'];
+  const uniqueCats = [...new Set(allSongs.map(s => s.cat).filter(Boolean))];
+  CATEGORIES = {};
+  uniqueCats.forEach((cat, i) => {
+    CATEGORIES[cat] = {
+      label: cat.charAt(0).toUpperCase() + cat.slice(1),
+      color: CAT_COLORS[i % CAT_COLORS.length]
+    };
+  });
+  // Update hero count
+  document.getElementById('heroSongCount').textContent = allSongs.length + ' lagu';
+  await fetchSetlist();
+  renderHome();
+  renderSongbook();
+}
+
+async function fetchSetlist() {
+  try {
+    // Add ?t=timestamp to prevent browser caching
+    const res = await fetch(NPOINT_URL + '?t=' + new Date().getTime());
+    
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    
+    const data = await res.json();
+    
+    // Check if the data format is correct (it must be an object with a 'setlist' array)
+    if (data && Array.isArray(data.setlist)) {
+      setlistIDs = data.setlist; 
+    } else {
+      console.warn('Format JSON salah. { "setlist": [1,2,3] }. Received:', data);
+      setlistIDs = []; // Fallback to empty if format is wrong
+    }
+    
+  } catch (err) {
+    console.warn('Could not load setlist:', err.message);
+    setlistIDs = [];
+  }
+}
+
+function showSetupGuide() {
+  document.getElementById('homeContent').innerHTML = `
+    <div class="setup-banner">
+      <h3>Langkah Setup GitHub CSV</h3>
+      <p>Belum ada data terhubung. Ikuti langkah berikut:</p>
+      <ol>
+        <li>Buat akun di <b>github.com</b> jika belum punya</li>
+        <li>Buat repository baru, contoh: <b>perkibodor</b></li>
+        <li>Upload dua file: <b>index.html</b> (file ini) dan <b>songs.csv</b></li>
+        <li>Buka file <b>songs.csv</b> di repo, lalu klik tombol <b>Raw</b></li>
+        <li>Copy URL-nya (dimulai dengan <b>raw.githubusercontent.com</b>)</li>
+        <li>Tempel URL tersebut di variabel <b>SHEET_URL</b> di dalam kode HTML ini</li>
+        <li>Aktifkan GitHub Pages: Settings → Pages → Deploy from main branch</li>
+      </ol>
+      <p style="margin-top:10px;">Format CSV: <b>id, title, category, language, key, stanza1, stanza2, ...</b></p>
+      <p style="margin-top:6px;">Kategori yang valid: <b>semangat, penyembahan, persembahan, perjamuan, penutup</b></p>
+    </div>`;
+  document.getElementById('songbookList').innerHTML = `
+    <div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5C9CE0" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div><div class="empty-text">Hubungkan GitHub CSV dulu ya</div></div>`;
+}
+
+function showFetchError(msg) {
+  const html = `<div class="error-box">
+    <div class="err-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E05C5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    <p>Gagal memuat data lagu</p>
+    <small>${msg}</small>
+    <br><button class="retry-btn" onclick="fetchSongs()">Coba Lagi</button>
+  </div>`;
+  document.getElementById('homeContent').innerHTML = html;
+  document.getElementById('songbookList').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════
+// HOME RENDER
+// ══════════════════════════════════════════════════════
+function renderHome() {
+  const setlistSongs = setlistIDs.map(id => allSongs.find(s => s.id === id)).filter(Boolean);
+  let html = '';
+  if (!setlistSongs.length) {
+    html = `<div class="empty-setlist">
+      <p>Setlist ibadah minggu ini belum dipilih.<br>Admin akan segera memperbaruinya.</p>
+    </div>`;
+  } else {
+    html = `<div class="setlist-header"><div class="setlist-label">Lagu Ibadah</div></div>
+    <div class="setlist-cards">
+      ${setlistSongs.map((s,i) => `
+        <div class="setlist-card" data-cat="${s.cat}" onclick="openModal(window._setlistSongs,${i})">
+          <div class="setlist-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="setlist-info">
+            <div class="setlist-title">${s.title}</div>
+            <div class="setlist-tags">
+              <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+              <span class="tag tag-lang">${s.lang}</span>
+              ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
+            </div>
+          </div>
+          <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>`).join('')}
+    </div>`;
+  }
+  // Add export button if there are songs
+  if (setlistSongs.length) {
+    html += `<div class="export-wrap">
+      <button class="export-btn" onclick="openExportModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Export Setlist ke Word
+      </button>
+    </div>`;
+  }
+  document.getElementById('homeContent').innerHTML = html;
+  window._setlistSongs = setlistSongs;
+}
+
+// ══════════════════════════════════════════════════════
+// SONGBOOK
+// ══════════════════════════════════════════════════════
+function initFilters() {
+  const allCats = ['all', ...Object.keys(CATEGORIES)];
+  document.getElementById('catFilters').innerHTML = allCats.map(c => `
+    <button class="filter-pill ${activeFilters.cat===c?'active':''}" onclick="setCatFilter('${c}')">
+      ${c==='all' ? 'All' : CATEGORIES[c].label}
+    </button>`).join('');
+  document.getElementById('langFilters').innerHTML = ['all','IDN','ENG','DEU'].map(l => `
+    <button class="filter-pill ${activeFilters.lang===l?'active':''}" onclick="setLangFilter('${l}')">
+      ${l==='all'?'All':l==='IDN'?'Indonesia':l==='ENG'?'English':'Deutsch'}
+    </button>`).join('');
+}
+function setCatFilter(c)  { activeFilters.cat=c;  renderSongbook(); }
+function setLangFilter(l) { activeFilters.lang=l; renderSongbook(); }
+function doSearch() {
+  const v = document.getElementById('searchInput').value;
+  document.getElementById('searchClear').classList.toggle('visible', v.length>0);
+  renderSongbook();
+}
+function clearSearch() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchClear').classList.remove('visible');
+  renderSongbook();
+}
+
+function renderSongbook() {
+  if (!allSongs.length) return;
+  initFilters();
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = allSongs.filter(s => {
+    const matchQ   = !q || s.title.toLowerCase().includes(q) || String(s.id).includes(q);
+    const matchCat = activeFilters.cat==='all'  || s.cat===activeFilters.cat;
+    const matchLng = activeFilters.lang==='all' || s.lang===activeFilters.lang;
+    return matchQ && matchCat && matchLng;
+  });
+  window._filteredSongs = filtered;
+  document.getElementById('resultsInfo').textContent = filtered.length + ' lagu ditemukan';
+  document.getElementById('bookSubtitle').textContent = filtered.length + ' dari ' + allSongs.length + ' lagu';
+
+  if (!filtered.length) {
+    document.getElementById('songbookList').innerHTML =
+      `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="empty-text">Tidak ada lagu ditemukan</div></div>`;
+    return;
+  }
+
+  // Flat list sorted by song ID
+  const sorted = [...filtered].sort((a,b) => a.id - b.id);
+  window._filteredSongs = sorted;
+
+  document.getElementById('songbookList').innerHTML = sorted.map((s, idx) => `
+    <div class="song-row" onclick="openModal(window._filteredSongs,${idx})">
+      <div class="cat-dot" data-cat="${s.cat}"></div>
+      <div class="song-row-num">${s.id}</div>
+      <div class="song-row-body">
+        <div class="song-row-title">${s.title}</div>
+        <div class="song-row-tags">
+          <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+          <span class="tag tag-lang">${s.lang}</span>
+          ${s.key ? `<span class="tag tag-key">${s.key}</span>` : ``}
+        </div>
+      </div>
+      <span class="chevron" style="color:var(--muted);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </div>`).join('');
+}
+
+
+function adminPinInput(n) {
+  if (adminPinBuffer.length >= 4) return;
+  adminPinBuffer += n;
+  updatePinDots(adminPinBuffer.length);
+  if (adminPinBuffer.length === 4) {
+    if (adminPinBuffer === ADMIN_PIN) {
+      setTimeout(() => { adminUnlocked=true; showAdminPanel(); }, 150);
+    } else {
+      shakeDots();
+      setTimeout(() => { adminPinBuffer=''; updatePinDots(0); }, 800);
+    }
+  }
+}
+function adminPinDelete() {
+  if (!adminPinBuffer.length) return;
+  adminPinBuffer = adminPinBuffer.slice(0,-1);
+  updatePinDots(adminPinBuffer.length);
+}
+function updatePinDots(count) {
+  for (let i=0;i<4;i++) {
+    const d=document.getElementById('ad'+i);
+    d.classList.toggle('filled', i<count);
+    d.classList.remove('error');
+  }
+}
+function shakeDots() {
+  for (let i=0;i<4;i++) document.getElementById('ad'+i).classList.add('error');
+}
+function showAdminPanel() {
+  document.getElementById('adminLock').style.display='none';
+  document.getElementById('adminPanel').style.display='block';
+  adminSelected = [...setlistIDs];
+  renderAdminCatFilters();
+  renderAdminSongs();
+}
+function lockAdmin() {
+  adminUnlocked=false; adminPinBuffer=''; updatePinDots(0);
+  document.getElementById('adminLock').style.display='block';
+  document.getElementById('adminPanel').style.display='none';
+}
+
+function renderAdminCatFilters() {
+  const cats = ['all', ...Object.keys(CATEGORIES)];
+  document.getElementById('adminCatFilters').innerHTML = cats.map(c => `
+    <button class="filter-pill ${adminCatFilter===c?'active':''}" onclick="setAdminCat('${c}')">
+      ${c==='all'?'Semua':CATEGORIES[c].emoji+' '+CATEGORIES[c].label}
+    </button>`).join('');
+}
+function setAdminCat(c) { adminCatFilter=c; renderAdminCatFilters(); renderAdminSongs(); }
+
+function renderAdminSongs() {
+  if (!allSongs.length) return;
+  const list = allSongs.filter(s => adminCatFilter==='all' || s.cat===adminCatFilter);
+  document.getElementById('adminSongList').innerHTML = list.map(s => `
+    <div class="admin-song-row ${adminSelected.includes(s.id)?'selected':''}" onclick="toggleAdminSong(${s.id})">
+      <div class="admin-checkbox">${adminSelected.includes(s.id)?'&#10003;':''}</div>
+      <div class="admin-song-info">
+        <div class="admin-song-title">${s.id}. ${s.title}</div>
+        <div class="admin-song-tags">
+          <span class="tag tag-cat">${(CATEGORIES[s.cat]||{label:s.cat}).label}</span>
+          <span class="tag tag-lang">${s.lang}</span>
+        </div>
+      </div>
+    </div>`).join('');
+  updateSelectedCount();
+}
+function toggleAdminSong(id) {
+  if (adminSelected.includes(id)) {
+    adminSelected = adminSelected.filter(x=>x!==id);
+  } else {
+    adminSelected.push(id);
+  }
+  renderAdminSongs();
+}
+function updateSelectedCount() {
+  document.getElementById('selectedCount').innerHTML = `Dipilih: <b>${adminSelected.length}</b> lagu`;
+  document.getElementById('adminSaveBtn').classList.toggle('visible', adminSelected.length>0);
+}
+
+
+// ══════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════
+function openModal(list, idx) {
+  modalContext=list; modalIdx=idx;
+  renderModal();
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function renderModal() {
+  const s = modalContext[modalIdx];
+  const cat = CATEGORIES[s.cat] || { label:s.cat };
+  document.getElementById('mEyebrow').textContent = `#${s.id} · ${cat.label}`;
+  document.getElementById('mTitle').textContent = s.title;
+  document.getElementById('mTags').innerHTML = `
+    <span class="tag tag-lang">${s.lang}</span>
+    ${s.key ? `<span class="tag tag-key">Key: ${s.key}</span>` : ''}
+    ${s.link ? `<a href="${s.link}" target="_blank" class="tag tag-link"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Listen</a>` : ''}`;
+  document.getElementById('mLyrics').innerHTML = s.lyrics.map(p =>
+    `<span class="stanza-label">${p.l}</span>${p.t}`).join('\n\n');
+  document.getElementById('mPrev').disabled = modalIdx===0;
+  document.getElementById('mNext').disabled = modalIdx===modalContext.length-1;
+  document.getElementById('modal').scrollTop=0;
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleOverlayClick(e) {
+  if (e.target===document.getElementById('modalOverlay')) closeModal();
+}
+function modalNav(dir) {
+  const n=modalIdx+dir;
+  if (n<0||n>=modalContext.length) return;
+  modalIdx=n; renderModal();
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('modalOverlay').classList.contains('open')) return;
+  if (e.key==='Escape') closeModal();
+  if (e.key==='ArrowRight') modalNav(1);
+  if (e.key==='ArrowLeft')  modalNav(-1);
+});
+
+// ══════════════════════════════════════════════════════
+// PAGE NAV
+// ══════════════════════════════════════════════════════
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  const map = { home:'homePage', songbook:'songbookPage' };
+  const nav = { home:'navHome', songbook:'navSongbook' };
+  document.getElementById(map[p]).classList.add('active');
+  document.getElementById(nav[p]).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════════════════
+// EXPORT TO WORD
+// ══════════════════════════════════════════════════════
+function openExportModal() {
+  // Pre-fill date with today in Indonesian format
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('exportDate').value = now.toLocaleDateString('id-ID', opts);
+  document.getElementById('exportOverlay').classList.add('open');
+}
+
+function closeExportModal() {
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+async function doExport() {
+  const date   = document.getElementById('exportDate').value.trim() || 'Ibadah PERKI';
+  const sermon = document.getElementById('exportSermon').value.trim();
+  const songs  = window._setlistSongs;
+  if (!songs || !songs.length) { showToast('Tidak ada lagu di setlist'); return; }
+
+  const btn = document.querySelector('.export-action-btn.primary');
+  btn.textContent = 'Membuat dokumen...';
+  btn.disabled = true;
+
+  try {
+    // Build HTML string that Word can open natively
+    let body = '';
+
+    // Header
+    body += `<h1 style="text-align:center;font-family:Arial;font-size:18pt;margin-bottom:4pt;">Ibadah PERKI Bochum</h1>`;
+    body += `<p style="text-align:center;font-family:Arial;font-size:13pt;margin-bottom:4pt;">${date}</p>`;
+    if (sermon) {
+      body += `<p style="text-align:center;font-family:Arial;font-size:11pt;font-style:italic;margin-bottom:12pt;">${sermon}</p>`;
+    }
+    body += `<hr style="border:1px solid #888;margin-bottom:16pt;">`;
+
+    // Build each song as a cell — two columns layout
+    // Split songs into two columns
+    const half = Math.ceil(songs.length / 2);
+    const col1 = songs.slice(0, half);
+    const col2 = songs.slice(half);
+
+    function songHTML(song, i) {
+      let s = `<p style="font-family:Arial;font-size:11pt;font-weight:bold;margin:0 0 3pt 0;">${i+1}. ${song.title}</p>`;
+      song.lyrics.forEach((stanza, si) => {
+        if (si > 0) s += `<p style="margin:3pt 0 0 0;">&nbsp;</p>`;
+        // No stanza label — just lyrics directly
+        const lines = stanza.t.split('\n');
+        lines.forEach(line => {
+          s += `<p style="font-family:Arial;font-size:9pt;margin:0 0 0 0;line-height:1.25;">${line.trim() || '&nbsp;'}</p>`;
+        });
+      });
+      return s;
+    }
+
+    // Build two-column table
+    let rows = '';
+    for (let i = 0; i < Math.max(col1.length, col2.length); i++) {
+      const left  = col1[i] ? songHTML(col1[i], i) : '';
+      const right = col2[i] ? songHTML(col2[i], i + half) : '';
+      rows += `<tr>
+        <td style="width:48%;vertical-align:top;padding:0 12pt 14pt 0;border:none;">${left}</td>
+        <td style="width:4%;border:none;border-left:1px solid #cccccc;">&nbsp;</td>
+        <td style="width:48%;vertical-align:top;padding:0 0 14pt 12pt;border:none;">${right}</td>
+      </tr>`;
+    }
+
+    body += `<table style="width:100%;border-collapse:collapse;border:none;"><tbody>${rows}</tbody></table>`;
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:w="urn:schemas-microsoft-com:office:word"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <title>Ibadah PERKI</title>
+        <!--[if gte mso 9]>
+        <xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml>
+        <![endif]-->
+        <style>
+          @page { margin: 1.8cm; }
+          body { font-family: Arial; }
+          table { width: 100%; }
+          td { border: none; }
+        </style>
+      </head>
+      <body>${body}</body>
+      </html>`;
+
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `Ibadah_Perki_${date.replace(/[^a-zA-Z0-9]/g,'_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+    closeExportModal();
+    showToast('Dokumen berhasil didownload');
+  } catch(err) {
+    showToast('Gagal membuat dokumen: ' + err.message);
+    console.error(err);
+  } finally {
+    btn.textContent = 'Download Word';
+    btn.disabled = false;
+  }
+}
+
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+const now = new Date();
+document.getElementById('heroDate').textContent =
+  now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+fetchSongs();
+</script>
+</body>
+</html>
