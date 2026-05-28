@@ -151,6 +151,62 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 }
 .empty-setlist p { font-size:13px; color:var(--muted); line-height:1.7; }
 
+/* ── EXPORT BUTTON ── */
+.export-wrap { padding:16px 20px 4px; }
+.export-btn {
+  width:100%; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:13px 16px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:500;
+  color:var(--muted2); cursor:pointer; transition:all 0.2s;
+  letter-spacing:0.3px;
+}
+.export-btn:hover { border-color:rgba(201,168,76,0.4); color:var(--gold); }
+.export-btn svg { flex-shrink:0; }
+.export-btn.loading { opacity:0.6; pointer-events:none; }
+
+/* ── EXPORT MODAL ── */
+.export-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(6px);
+  z-index:300; display:flex; align-items:center; justify-content:center;
+  padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.export-overlay.open { opacity:1; pointer-events:all; }
+.export-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:28px; width:100%; max-width:400px; text-align:center;
+}
+.export-box-title {
+  font-family:'Playfair Display',serif; font-size:18px; font-weight:700;
+  margin-bottom:6px;
+}
+.export-box-sub { font-size:12px; color:var(--muted); margin-bottom:20px; line-height:1.6; }
+.export-date-input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 14px; margin-bottom:12px;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; box-sizing:border-box;
+}
+.export-date-input:focus { border-color:rgba(201,168,76,0.4); }
+.export-sermon-input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 14px; margin-bottom:20px;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; box-sizing:border-box;
+  resize:none; height:60px;
+}
+.export-sermon-input:focus { border-color:rgba(201,168,76,0.4); }
+.export-btns { display:flex; gap:10px; }
+.export-action-btn {
+  flex:1; border-radius:12px; padding:13px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; border:1px solid var(--border); transition:all 0.15s;
+  letter-spacing:0.3px;
+}
+.export-action-btn.primary { background:var(--gold); color:var(--bg); border-color:var(--gold); }
+.export-action-btn.secondary { background:var(--surface2); color:var(--muted2); }
+
 /* ── SONGBOOK ── */
 .page-header {
   padding:52px 20px 16px;
@@ -366,6 +422,20 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
     <div class="modal-nav-bar">
       <button class="modal-nav-btn" id="mPrev" onclick="modalNav(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Prev</button>
       <button class="modal-nav-btn" id="mNext" onclick="modalNav(1)">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" transform="scale(-1,1) translate(-24,0)"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ EXPORT MODAL ══════════════ -->
+<div class="export-overlay" id="exportOverlay">
+  <div class="export-box">
+    <div class="export-box-title">Export ke Word</div>
+    <div class="export-box-sub">Masukkan detail ibadah untuk dokumen</div>
+    <input class="export-date-input" id="exportDate" type="text" placeholder="Contoh: Sabtu, 24 Mei 2026">
+    <textarea class="export-sermon-input" id="exportSermon" placeholder="Firman Tuhan (opsional): Kis 2:1-13 ,,Dipenuhi untuk Diutus""></textarea>
+    <div class="export-btns">
+      <button class="export-action-btn primary" onclick="doExport()">Download Word</button>
+      <button class="export-action-btn secondary" onclick="closeExportModal()">Batal</button>
     </div>
   </div>
 </div>
@@ -631,6 +701,15 @@ function renderHome() {
         </div>`).join('')}
     </div>`;
   }
+  // Add export button if there are songs
+  if (setlistSongs.length) {
+    html += `<div class="export-wrap">
+      <button class="export-btn" onclick="openExportModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Export Setlist ke Word
+      </button>
+    </div>`;
+  }
   document.getElementById('homeContent').innerHTML = html;
   window._setlistSongs = setlistSongs;
 }
@@ -846,6 +925,115 @@ function showToast(msg) {
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
+
+// ══════════════════════════════════════════════════════
+// EXPORT TO WORD
+// ══════════════════════════════════════════════════════
+function openExportModal() {
+  // Pre-fill date with today in Indonesian format
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('exportDate').value = now.toLocaleDateString('id-ID', opts);
+  document.getElementById('exportOverlay').classList.add('open');
+}
+
+function closeExportModal() {
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+async function doExport() {
+  const date   = document.getElementById('exportDate').value.trim() || 'Ibadah PERKI';
+  const sermon = document.getElementById('exportSermon').value.trim();
+  const songs  = window._setlistSongs;
+  if (!songs || !songs.length) { showToast('Tidak ada lagu di setlist'); return; }
+
+  const btn = document.querySelector('.export-action-btn.primary');
+  btn.textContent = 'Membuat dokumen...';
+  btn.disabled = true;
+
+  try {
+    // Build HTML string that Word can open natively
+    let body = '';
+
+    // Header
+    body += `<h1 style="text-align:center;font-family:Arial;font-size:18pt;margin-bottom:4pt;">Ibadah PERKI Bochum</h1>`;
+    body += `<p style="text-align:center;font-family:Arial;font-size:13pt;margin-bottom:4pt;">${date}</p>`;
+    if (sermon) {
+      body += `<p style="text-align:center;font-family:Arial;font-size:11pt;font-style:italic;margin-bottom:12pt;">${sermon}</p>`;
+    }
+    body += `<hr style="border:1px solid #888;margin-bottom:16pt;">`;
+
+    // Build each song as a cell — two columns layout
+    // Split songs into two columns
+    const half = Math.ceil(songs.length / 2);
+    const col1 = songs.slice(0, half);
+    const col2 = songs.slice(half);
+
+    function songHTML(song, i) {
+      let s = `<p style="font-family:Arial;font-size:11pt;font-weight:bold;margin:0 0 3pt 0;">${i+1}. ${song.title}</p>`;
+      song.lyrics.forEach((stanza, si) => {
+        if (si > 0) s += `<p style="margin:3pt 0 0 0;">&nbsp;</p>`;
+        // No stanza label — just lyrics directly
+        const lines = stanza.t.split('\n');
+        lines.forEach(line => {
+          s += `<p style="font-family:Arial;font-size:9pt;margin:0 0 0 0;line-height:1.25;">${line.trim() || '&nbsp;'}</p>`;
+        });
+      });
+      return s;
+    }
+
+    // Build two-column table
+    let rows = '';
+    for (let i = 0; i < Math.max(col1.length, col2.length); i++) {
+      const left  = col1[i] ? songHTML(col1[i], i) : '';
+      const right = col2[i] ? songHTML(col2[i], i + half) : '';
+      rows += `<tr>
+        <td style="width:48%;vertical-align:top;padding:0 12pt 14pt 0;border:none;">${left}</td>
+        <td style="width:4%;border:none;border-left:1px solid #cccccc;">&nbsp;</td>
+        <td style="width:48%;vertical-align:top;padding:0 0 14pt 12pt;border:none;">${right}</td>
+      </tr>`;
+    }
+
+    body += `<table style="width:100%;border-collapse:collapse;border:none;"><tbody>${rows}</tbody></table>`;
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:w="urn:schemas-microsoft-com:office:word"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <title>Ibadah PERKI</title>
+        <!--[if gte mso 9]>
+        <xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml>
+        <![endif]-->
+        <style>
+          @page { margin: 1.8cm; }
+          body { font-family: Arial; }
+          table { width: 100%; }
+          td { border: none; }
+        </style>
+      </head>
+      <body>${body}</body>
+      </html>`;
+
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `Ibadah_Perki_${date.replace(/[^a-zA-Z0-9]/g,'_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+    closeExportModal();
+    showToast('Dokumen berhasil didownload');
+  } catch(err) {
+    showToast('Gagal membuat dokumen: ' + err.message);
+    console.error(err);
+  } finally {
+    btn.textContent = 'Download Word';
+    btn.disabled = false;
+  }
+}
+
 
 // ══════════════════════════════════════════════════════
 // INIT
