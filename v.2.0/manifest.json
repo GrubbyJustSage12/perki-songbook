@@ -1,0 +1,16 @@
+{
+  "name": "Perki Bodor - Buku Lagu",
+  "short_name": "Perki Bodor",
+  "description": "Buku lagu digital Persekutuan Kristen Indonesia Bochum & Dortmund",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1014",
+  "theme_color": "#0F1014",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
