@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F1014">
+<title>Perki Bodor — Ulang Tahun</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="page active bd-page">
+
+  <div class="home-hero">
+    <div class="hero-eyebrow">Perki Bodor · Pengurus</div>
+    <div class="hero-title">Daftar<br><em>Ulang Tahun</em></div>
+  </div>
+
+  <!-- ══════════ LOCKED ══════════ -->
+  <div id="bdLock" class="bd-card">
+    <div class="bd-lock-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <div class="bd-card-title">Masukkan password</div>
+    <input id="bdPassword" class="bd-input" type="password" autocomplete="current-password" placeholder="Password pengurus">
+    <div class="bd-msg" id="bdLockMsg" role="alert"></div>
+    <button class="bd-btn primary" id="bdUnlockBtn">Buka</button>
+  </div>
+
+  <!-- ══════════ UNLOCKED ══════════ -->
+  <div id="bdMain" hidden>
+    <div class="bd-toolbar">
+      <div class="bd-label">Interval tanggal</div>
+      <button class="bd-link-btn" id="bdLockBtn">Kunci</button>
+    </div>
+
+    <div class="bd-interval">
+      <input type="date" id="bdFrom" class="bd-input" aria-label="Dari tanggal">
+      <span class="bd-interval-sep">sampai</span>
+      <input type="date" id="bdTo" class="bd-input" aria-label="Sampai tanggal">
+      <button class="bd-btn primary" id="bdLoadBtn">Tampilkan</button>
+    </div>
+    <div class="bd-source" id="bdSource"></div>
+
+    <div id="bdResults"></div>
+
+    <div class="bd-actions" id="bdActions" hidden>
+      <button class="bd-btn" id="bdCopyBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Salin daftar
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+// Google Apps Script web app that checks the password and returns the birthdays
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqCyw9TKJ9AzExPGEyigFbqDzx9JsZdbEy0eNijKEuPBluRatpWBY_en_PrHRxO_gSOg/exec';
+
+// Same npoint document as the songbook. Add these two fields to set the interval:
+//   "birthdayFrom": "2026-12-01", "birthdayTo": "2026-12-15"
+const NPOINT_ID  = '8a3a81fe14479855cd82';
+const NPOINT_URL = `https://api.npoint.io/${NPOINT_ID}`;
+
+const DEFAULT_WINDOW_DAYS = 14;      // used when npoint has no interval yet
+const IDLE_LOCK_MINUTES   = 15;      // page locks itself after this much inactivity
+
+// ══════════════════════════════════════════════════════
+// STATE  (the password lives in memory only: never saved on the device)
+// ══════════════════════════════════════════════════════
+let password   = '';
+let lastResult = null;
+let idleTimer  = null;
+
+const $ = id => document.getElementById(id);
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
+
+const pad2 = n => String(n).padStart(2, '0');
+const isISO = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+function toISO(d)    { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function fromISO(s)  { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function todayLocal(){ const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function fmtDay(iso)   { return fromISO(iso).toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' }); }
+function fmtFull(iso)  { return fromISO(iso).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }); }
+function fmtRange(a, b){ return fmtFull(a) + ' – ' + fmtFull(b); }
+
+function daysUntil(iso) { return Math.round((fromISO(iso) - todayLocal()) / 86400000); }
+function whenLabel(n) {
+  if (n === 0)  return 'Hari ini';
+  if (n === 1)  return 'Besok';
+  if (n === -1) return 'Kemarin';
+  return n > 1 ? n + ' hari lagi' : (-n) + ' hari lalu';
+}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+const ERRORS = {
+  wrong_password:   'Password salah.',
+  bad_interval:     'Interval tidak valid. Tanggal akhir tidak boleh lebih awal dari tanggal awal.',
+  interval_too_long:'Interval terlalu panjang (maksimal sekitar 13 bulan).',
+  bad_request:      'Permintaan tidak valid.',
+  use_post:         'Permintaan tidak valid.'
+};
+function errorText(r) {
+  if (r && r.error === 'server_error') return 'Terjadi kesalahan di server: ' + (r.message || 'tidak diketahui');
+  return (r && ERRORS[r.error]) || 'Terjadi kesalahan. Coba lagi.';
+}
+
+// ══════════════════════════════════════════════════════
+// INTERVAL (from npoint, editable on the page)
+// ══════════════════════════════════════════════════════
+async function loadIntervalDefaults() {
+  let from = null, to = null, fromNpoint = false;
+  try {
+    const res = await fetch(NPOINT_URL + '?t=' + Date.now());
+    if (res.ok) {
+      const data = await res.json();
+      if (isISO(data.birthdayFrom) && isISO(data.birthdayTo)) {
+        from = data.birthdayFrom; to = data.birthdayTo; fromNpoint = true;
+      }
+    }
+  } catch (e) { /* fall back to the default interval below */ }
+
+  if (!from) {
+    const t = todayLocal();
+    from = toISO(t); to = toISO(addDays(t, DEFAULT_WINDOW_DAYS));
+  }
+  $('bdFrom').value = from;
+  $('bdTo').value = to;
+}
+const intervalReady = loadIntervalDefaults();
+
+// ══════════════════════════════════════════════════════
+// REQUEST
+// ══════════════════════════════════════════════════════
+async function requestList(pw, from, to) {
+  // No custom headers on purpose: keeps this a "simple" request, so the browser
+  // sends it straight to Google without a CORS preflight.
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ password: pw, from: from, to: to })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+// ══════════════════════════════════════════════════════
+// UNLOCK / LOCK
+// ══════════════════════════════════════════════════════
+async function unlock() {
+  const pw = $('bdPassword').value;
+  if (!pw) { $('bdLockMsg').textContent = 'Masukkan password dulu.'; return; }
+
+  const btn = $('bdUnlockBtn');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  $('bdLockMsg').textContent = '';
+
+  try {
+    await intervalReady;
+    const r = await requestList(pw, $('bdFrom').value, $('bdTo').value);
+    if (!r.ok) {
+      $('bdLockMsg').textContent = errorText(r);
+      if (r.error === 'wrong_password') { $('bdPassword').value = ''; $('bdPassword').focus(); }
+      return;
+    }
+    password = pw;
+    $('bdPassword').value = '';
+    $('bdLock').hidden = true;
+    $('bdMain').hidden = false;
+    renderResults(r);
+    resetIdle();
+  } catch (err) {
+    $('bdLockMsg').textContent = 'Tidak bisa terhubung ke server. Periksa koneksi internet lalu coba lagi.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Buka';
+  }
+}
+
+function lock() {
+  password = ''; lastResult = null;
+  clearTimeout(idleTimer);
+  $('bdResults').innerHTML = '';
+  $('bdActions').hidden = true;
+  $('bdMain').hidden = true;
+  $('bdLock').hidden = false;
+  $('bdLockMsg').textContent = '';
+}
+
+function resetIdle() {
+  clearTimeout(idleTimer);
+  if (password) idleTimer = setTimeout(lock, IDLE_LOCK_MINUTES * 60000);
+}
+['click', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
+
+// ══════════════════════════════════════════════════════
+// LOAD + RENDER
+// ══════════════════════════════════════════════════════
+async function loadList() {
+  const from = $('bdFrom').value, to = $('bdTo').value;
+  if (!isISO(from) || !isISO(to)) { showToast('Isi kedua tanggal dulu'); return; }
+
+  const btn = $('bdLoadBtn');
+  btn.disabled = true; btn.textContent = 'Memuat...';
+  $('bdActions').hidden = true;
+  $('bdResults').innerHTML = '<div class="loading-screen bd-loading"><div class="spinner"></div><div class="loading-text">Memuat data...</div></div>';
+
+  try {
+    const r = await requestList(password, from, to);
+    if (!r.ok) {
+      if (r.error === 'wrong_password') { lock(); $('bdLockMsg').textContent = 'Sesi berakhir. Masukkan password lagi.'; return; }
+      $('bdResults').innerHTML = '<div class="error-box"><p>' + escapeHtml(errorText(r)) + '</p></div>';
+      return;
+    }
+    renderResults(r);
+  } catch (err) {
+    $('bdResults').innerHTML = '<div class="error-box"><p>Tidak bisa terhubung ke server.</p><small>Periksa koneksi internet lalu coba lagi.</small></div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tampilkan';
+  }
+}
+
+function rowHTML(p) {
+  const dt = fromISO(p.date);
+
+  // Use the original birthday day/month when provided.
+  // This keeps 29 FEB visible even when it is observed on 28 FEB.
+  const day = Number.isInteger(p.displayDay) ? p.displayDay : dt.getDate();
+  const month = Number.isInteger(p.displayMonth) ? p.displayMonth : dt.getMonth() + 1;
+
+  const mon = new Date(2000, month - 1, 1)
+    .toLocaleDateString('id-ID', { month:'short' })
+    .replace('.', '')
+    .toUpperCase();
+
+  return '<div class="bd-row">' +
+    '<div class="bd-date"><div class="bd-date-day">' + day + '</div><div class="bd-date-mon">' + escapeHtml(mon) + '</div></div>' +
+    '<div class="bd-info"><div class="bd-name">' + escapeHtml(p.name) + '</div></div>' +
+  '</div>';
+}
+
+function renderResults(r) {
+  lastResult = r;
+  let html = '<div class="bd-summary"><span class="bd-count">' + r.count + '</span> ulang tahun · ' + escapeHtml(fmtRange(r.from, r.to)) + '</div>';
+
+  if (r.skippedRows && r.skippedRows.length) {
+    html += '<div class="bd-warn">' + r.skippedRows.length + ' baris di Sheet tidak terbaca (baris ' +
+            escapeHtml(r.skippedRows.join(', ')) + '). Periksa nama dan tanggal lahirnya.</div>';
+  }
+
+  if (!r.count) {
+    html += '<div class="empty-state"><div class="empty-text">Tidak ada yang berulang tahun di interval ini</div></div>';
+  } else {
+    html += '<div class="bd-list">' + r.people.map(rowHTML).join('') + '</div>';
+  }
+  $('bdResults').innerHTML = html;
+  $('bdActions').hidden = !r.count;
+}
+
+// ══════════════════════════════════════════════════════
+// COPY LIST (for WhatsApp etc.)
+// ══════════════════════════════════════════════════════
+async function copyList() {
+  if (!lastResult || !lastResult.count) return;
+
+  const lines = ['Ulang tahun ' + fmtRange(lastResult.from, lastResult.to)];
+
+  lastResult.people.forEach(p => {
+    const dt = fromISO(p.date);
+    const day = Number.isInteger(p.displayDay) ? p.displayDay : dt.getDate();
+    const month = Number.isInteger(p.displayMonth) ? p.displayMonth : dt.getMonth() + 1;
+    const birthday = new Date(2000, month - 1, day).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long'
+    });
+
+    lines.push('- ' + birthday + ': ' + p.name);
+  });
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    showToast('Daftar disalin');
+  } catch (e) {
+    showToast('Gagal menyalin');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════
+$('bdUnlockBtn').addEventListener('click', unlock);
+$('bdPassword').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+$('bdLockBtn').addEventListener('click', lock);
+$('bdLoadBtn').addEventListener('click', loadList);
+$('bdCopyBtn').addEventListener('click', copyList);
+</script>
+</body>
+</html>
