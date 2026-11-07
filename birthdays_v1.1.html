@@ -263,7 +263,7 @@ function rowHTML(p) {
 
 function renderResults(r) {
   lastResult = r;
-  let html = '<div class="bd-summary"><span class="bd-count">' + r.count + '</span> ulang tahun · ' + escapeHtml(fmtRange(r.from, r.to)) + '</div>';
+  let html = '<div class="bd-summary"><span class="bd-count">' + r.count + '</span> Orang · ' + escapeHtml(fmtRange(r.from, r.to)) + '</div>';
 
   if (r.skippedRows && r.skippedRows.length) {
     html += '<div class="bd-warn">' + r.skippedRows.length + ' baris di Sheet tidak terbaca (baris ' +
