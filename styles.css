@@ -376,3 +376,77 @@ body { background:var(--bg); color:var(--text); font-family:'Jost',sans-serif; m
 
 /* ── OFFLINE CHIP ── */
 .offline-chip { color:var(--gold); border-color:rgba(201,168,76,0.35); background:var(--gold-dim); }
+
+/* ── BIRTHDAYS (birthdays.html) ── */
+.bd-page { padding-bottom:40px; }
+.bd-page [hidden] { display:none !important; }
+
+.bd-card {
+  margin:24px 20px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:28px 22px; text-align:center;
+}
+.bd-lock-icon { color:var(--gold); margin-bottom:12px; display:flex; justify-content:center; }
+.bd-card-title { font-family:'Playfair Display',serif; font-size:20px; margin-bottom:6px; }
+.bd-card-sub { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:18px; }
+
+.bd-input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:12px 14px;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; color-scheme:dark;
+}
+.bd-input:focus { border-color:rgba(201,168,76,0.4); }
+.bd-msg { min-height:18px; font-size:12px; color:var(--red); margin:10px 0; line-height:1.5; }
+
+.bd-btn {
+  width:100%; border-radius:12px; padding:13px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.3px;
+  cursor:pointer; border:1px solid var(--border);
+  background:var(--surface2); color:var(--muted2); transition:all 0.15s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.bd-btn:hover { border-color:rgba(201,168,76,0.4); }
+.bd-btn.primary { background:var(--gold); color:var(--bg); border-color:var(--gold); }
+.bd-btn:disabled { opacity:0.6; pointer-events:none; }
+
+.bd-toolbar { padding:20px 20px 10px; display:flex; align-items:center; justify-content:space-between; }
+.bd-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+.bd-link-btn {
+  background:none; border:1px solid var(--border); border-radius:20px;
+  padding:4px 12px; font-family:'Jost',sans-serif; font-size:11px;
+  color:var(--muted); cursor:pointer;
+}
+.bd-link-btn:hover { color:var(--gold); border-color:rgba(201,168,76,0.4); }
+
+.bd-interval {
+  padding:0 20px; display:grid; grid-template-columns:1fr auto 1fr;
+  gap:10px; align-items:center;
+}
+.bd-interval .bd-btn { grid-column:1 / -1; }
+.bd-interval-sep { font-size:12px; color:var(--muted); }
+.bd-source { padding:10px 20px 0; font-size:11px; color:var(--muted); line-height:1.6; }
+
+.bd-summary { padding:22px 20px 10px; font-size:12px; color:var(--muted2); }
+.bd-count { font-family:'Playfair Display',serif; font-size:22px; color:var(--gold2); margin-right:4px; }
+.bd-warn {
+  margin:4px 20px 8px; padding:12px 14px; border-radius:12px;
+  background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.25);
+  font-size:12px; color:var(--gold2); line-height:1.6;
+}
+
+.bd-list { padding:0 20px; display:flex; flex-direction:column; gap:10px; }
+.bd-row {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:14px 16px;
+  display:flex; align-items:center; gap:14px;
+}
+.bd-row.today { border-color:rgba(201,168,76,0.5); background:linear-gradient(to right, var(--gold-dim), var(--surface)); }
+.bd-date { min-width:44px; text-align:center; }
+.bd-date-day { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--gold2); line-height:1; }
+.bd-date-mon { font-size:10px; letter-spacing:2px; color:var(--muted2); margin-top:4px; }
+.bd-info { flex:1; min-width:0; }
+.bd-name { font-family:'Playfair Display',serif; font-size:17px; font-weight:600; margin-bottom:5px; overflow-wrap:anywhere; }
+.bd-meta { display:flex; gap:6px; flex-wrap:wrap; }
+.bd-when { font-size:11px; color:var(--muted2); text-align:right; white-space:nowrap; }
+.bd-actions { padding:16px 20px 0; }
+.bd-loading { min-height:30vh; }
